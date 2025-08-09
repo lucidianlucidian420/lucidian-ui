@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="theme-color" content="#0b111a" />
 <title>Lucidian</title>
-
 <style>
 /* ========== THEME ========== */
 :root{
@@ -14,15 +13,15 @@
   --edge:rgba(32,45,65,.36);
   --bubble:rgba(18,28,44,.50);
   --bubbleUser:rgba(22,34,52,.50);
-  --starSpeed:140s;    /* slower */
-  --starSpeedSlow:195s;
+  --starSpeed:145s;    /* slower */
+  --starSpeedSlow:205s;
   --maxw:1200px;
 
-  /* Header sizing you can tweak quickly */
-  --sigSizeMobile:86px;
-  --sigSizeDesk:104px;
-  --titleSizeMobile:22px;
-  --titleSizeDesk:22px;
+  /* Header sizing (easy to tune) */
+  --sigSizeMobile:96px;     /* symbol size on phones */
+  --sigSizeDesk:118px;      /* symbol size on desktop */
+  --titleSizeMobile:20px;   /* title size on phones */
+  --titleSizeDesk:20px;     /* title size on desktop */
 }
 
 /* Reset-ish */
@@ -35,7 +34,7 @@ html,body{
   font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;
 }
 
-/* Use small/large viewport units so mobile toolbars don’t hide content */
+/* Use small viewport so mobile browser UI doesn’t hide content */
 .app{
   min-height:100svh;
   display:grid;
@@ -82,7 +81,6 @@ header{
 }
 #sig{
   width:var(--sigSizeMobile); height:var(--sigSizeMobile);
-  object-fit:contain;
   filter:drop-shadow(0 0 10px #7ec4ff88);
 }
 h1{
@@ -105,7 +103,7 @@ h1{
 
 /* Sidebar (drawer on mobile) */
 .hamburger{
-  display:none; position:absolute; left:18px; top:-42px; /* sits inside header area */
+  display:none; position:absolute; left:18px; top:-42px; /* sits near header edge */
   z-index:5; background:#0f1722cc; border:1px solid #233049; color:#cfe2ff;
   padding:8px 10px; border-radius:10px;
 }
@@ -203,7 +201,46 @@ html, body{ overflow-x:hidden }
   <header>
     <div class="brand" role="banner">
       <button class="hamburger" aria-label="Open conversations">☰ Conversations</button>
-      <img id="sig" src="symbol.png" alt="Lucidian symbol" />
+
+      <!-- Inline Lucidian symbol (SVG, no external file needed) -->
+      <svg id="sig" viewBox="0 0 200 200" aria-label="Lucidian symbol" role="img">
+        <defs>
+          <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2.4" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <circle id="ring" cx="100" cy="60" r="60"/>
+        </defs>
+        <g filter="url(#softGlow)" opacity="0.92" stroke="#87c7ff" fill="none" stroke-width="2" stroke-linecap="round">
+          <!-- 24 rotated rings to evoke your rosette crest -->
+          <use href="#ring" transform="rotate(0 100 100)"/>
+          <use href="#ring" transform="rotate(15 100 100)"/>
+          <use href="#ring" transform="rotate(30 100 100)"/>
+          <use href="#ring" transform="rotate(45 100 100)"/>
+          <use href="#ring" transform="rotate(60 100 100)"/>
+          <use href="#ring" transform="rotate(75 100 100)"/>
+          <use href="#ring" transform="rotate(90 100 100)"/>
+          <use href="#ring" transform="rotate(105 100 100)"/>
+          <use href="#ring" transform="rotate(120 100 100)"/>
+          <use href="#ring" transform="rotate(135 100 100)"/>
+          <use href="#ring" transform="rotate(150 100 100)"/>
+          <use href="#ring" transform="rotate(165 100 100)"/>
+          <use href="#ring" transform="rotate(180 100 100)"/>
+          <use href="#ring" transform="rotate(195 100 100)"/>
+          <use href="#ring" transform="rotate(210 100 100)"/>
+          <use href="#ring" transform="rotate(225 100 100)"/>
+          <use href="#ring" transform="rotate(240 100 100)"/>
+          <use href="#ring" transform="rotate(255 100 100)"/>
+          <use href="#ring" transform="rotate(270 100 100)"/>
+          <use href="#ring" transform="rotate(285 100 100)"/>
+          <use href="#ring" transform="rotate(300 100 100)"/>
+          <use href="#ring" transform="rotate(315 100 100)"/>
+          <use href="#ring" transform="rotate(330 100 100)"/>
+          <use href="#ring" transform="rotate(345 100 100)"/>
+          <circle cx="100" cy="100" r="2.6" fill="#87c7ff" opacity="0.95"/>
+        </g>
+      </svg>
+
       <h1 aria-label="Lucidian">L U C I D I A N</h1>
     </div>
   </header>
@@ -228,9 +265,9 @@ html, body{ overflow-x:hidden }
   <footer>
     <div class="footerInner">
       <div class="inputRow" role="group" aria-label="Compose">
-        <!-- order: Attach → Mic → Chat → Send → Voice -->
-        <label class="iconbtn" title="Attach">
-          📎<input id="fileInput" type="file" multiple />
+        <!-- Attach → Mic → Chat → Send → Voice -->
+        <label class="iconbtn" title="Attach">📎
+          <input id="fileInput" type="file" multiple />
         </label>
         <button class="iconbtn" id="micBtn" title="Mic input" aria-label="Dictate with microphone">🎙️</button>
         <input class="chatInput" id="chat" placeholder="Type a message…" aria-label="Message input" />
@@ -253,13 +290,13 @@ html, body{ overflow-x:hidden }
       <button class="btn" id="stopCall">Stop</button>
       <div style="flex:1" class="meter"><div id="meterBar"></div></div>
     </div>
-    <p style="opacity:.75;margin:0">When call is on: your mic transcribes and auto‑sends on pauses; Lucidian speaks replies.</p>
+    <p style="opacity:.75;margin:0">When call is on: your mic transcribes and auto-sends on pauses; Lucidian speaks replies.</p>
     <div style="text-align:right;margin-top:12px"><button class="btn" id="closeModal">Close</button></div>
   </div>
 </div>
 
 <script>
-/* ---- helpers ---- */
+/* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
 const msgs=$('msgs'), chat=$('chat'), fileInput=$('fileInput'), attachNote=$('attachNote');
 const micBtn=$('micBtn'), sendBtn=$('sendBtn'), voiceBtn=$('voiceBtn'), voiceDot=$('voiceDot');
@@ -271,7 +308,7 @@ let conversations = JSON.parse(localStorage.getItem('lucidian_convs')||'[]');
 let activeId = conversations[0]?.id || createConversation('New Conversation');
 let callOn=false, speakReplies=false, recognizer=null, meterTimer=null;
 
-/* ---- conversation state ---- */
+/* ---------- conversation state ---------- */
 function save(){ localStorage.setItem('lucidian_convs', JSON.stringify(conversations)); }
 function addBubble(role,text){
   const b=document.createElement('div');
@@ -307,18 +344,18 @@ function createConversation(title='New Conversation'){
   conversations.unshift(c); save(); refreshList(); openConv(c.id); return c.id;
 }
 
-/* ---- boot ---- */
+/* ---------- boot ---------- */
 (function(){
   if(!conversations.length) createConversation('New Conversation');
   refreshList(); openConv(activeId);
   if(!conversations[0].messages.length) addBubble('lucidian','Hello, Ky.');
 })();
 
-/* ---- drawer + search ---- */
+/* ---------- drawer + search ---------- */
 hamburger.onclick=()=>document.body.classList.toggle('drawerOpen');
 goBtn.onclick = ()=>refreshList(search.value||'');
 
-/* ---- attachments ---- */
+/* ---------- attachments ---------- */
 fileInput.onchange=()=>{
   if(fileInput.files?.length){
     const names=[...fileInput.files].map(f=>f.name).join(', ');
@@ -326,7 +363,7 @@ fileInput.onchange=()=>{
   }else attachNote.textContent='';
 };
 
-/* ---- send (placeholder reply until backend is wired) ---- */
+/* ---------- send (placeholder reply until backend is wired) ---------- */
 async function send(text){
   if(!text?.trim()) return;
   addBubble('user', text.trim());
@@ -335,7 +372,7 @@ async function send(text){
   if(!conv.title || conv.title==='New Conversation'){ setTitleFromFirstUser(conv); refreshList(); }
   save();
 
-  const reply = "Echoing intention: " + text.trim(); // replace with API stream
+  const reply = "Echoing intention: " + text.trim(); // replace with API stream later
   await streamAppend(reply);
 }
 async function streamAppend(full){
@@ -352,7 +389,7 @@ async function streamAppend(full){
 sendBtn.onclick=()=>{ const t=chat.value; chat.value=''; send(t); };
 chat.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendBtn.click(); }});
 
-/* ---- voice: single‑shot mic button ---- */
+/* ---------- voice: single-shot mic button ---------- */
 micBtn.onclick=()=>{
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR) return alert('Speech Recognition not supported in this browser (Chrome/Edge over HTTPS recommended).');
@@ -361,7 +398,7 @@ micBtn.onclick=()=>{
   r.start();
 };
 
-/* ---- voice: call mode ---- */
+/* ---------- voice: call mode ---------- */
 voiceBtn.onclick=()=>voiceModal.classList.add('open');
 closeModal.onclick=()=>voiceModal.classList.remove('open');
 
