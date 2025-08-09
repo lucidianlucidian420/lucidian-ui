@@ -12,7 +12,7 @@
   --maxw:1200px;
 }
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-*{box-sizing:border-box}
+*{box-sizing:border-box;min-width:0}
 html,body{height:100%}
 body{margin:0;background:#000;color:var(--text);font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,sans-serif;overflow-x:hidden}
 
@@ -47,9 +47,10 @@ header{position:sticky;top:0;z-index:20;text-align:center;padding:14px 12px 6px;
 .crest .glow{stroke:rgba(232,198,106,.35);stroke-width:4;filter:blur(1px)}
 h1{margin:6px 0 0;letter-spacing:8px;font-size:1.25rem;color:var(--accent);text-shadow:0 0 12px rgba(232,198,106,.45);font-weight:700}
 
-/* Content */
+/* Content grid */
 .content{max-width:var(--maxw);margin:8px auto 0;padding:0 16px;display:grid;grid-template-columns:300px 1fr;gap:14px;min-height:0}
 @media(max-width:900px){.content{grid-template-columns:1fr}}
+/* Sidebar */
 .sidebar{
   background:var(--glassStrong);backdrop-filter:blur(8px);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);
   overflow:auto;min-height:0
@@ -71,23 +72,35 @@ h1{margin:6px 0 0;letter-spacing:8px;font-size:1.25rem;color:var(--accent);text-
 .conv.active{background:rgba(255,255,255,.12)}
 .conv .select{border:none;border-radius:6px;padding:4px 8px;background:var(--accent);color:#000;cursor:pointer}
 
-/* Chat area (only bubbles) */
+/* Chat area */
 .chatArea{min-height:0;display:flex;flex-direction:column}
 .msgs{flex:1;overflow:auto;padding:8px 8px 14vh;overscroll-behavior:contain}
-.message{
-  max-width:min(780px,92%); padding:12px 16px; margin:10px 0; border-radius:12px; line-height:1.45;
+
+/* ROW + BUBBLE (auto width) */
+.row{display:flex;gap:8px}
+.row.user{justify-content:flex-end}
+.row.lucidian{justify-content:flex-start}
+.bubble{
+  display:inline-block; max-width:min(780px,70%); /* short msgs stay short, long wrap */
+  padding:12px 16px; margin:10px 0; border-radius:12px; line-height:1.45;
   background:rgba(255,255,255,.10); backdrop-filter:blur(2px);
-  white-space:pre-wrap;             /* keep \n */
-  overflow-wrap:anywhere;           /* break very long strings */
-  word-break:break-word;            /* avoid horizontal scroll */
+  white-space:pre-wrap;            /* preserve \n */
+  overflow-wrap:anywhere;          /* break long strings */
+  word-break:break-word;
 }
-.message.lucidian{border:1px solid var(--accent);color:var(--accent);background:var(--accentSoft);box-shadow:0 0 12px rgba(232,198,106,.18); margin-right:auto; text-align:left}
-.message.user{border:1px solid rgba(255,255,255,.7);color:#fff; margin-left:auto; text-align:right}
+.row.lucidian .bubble{border:1px solid var(--accent);color:var(--accent);background:var(--accentSoft);box-shadow:0 0 12px rgba(232,198,106,.18);text-align:left}
+.row.user .bubble{border:1px solid rgba(255,255,255,.7);color:#fff;text-align:right}
+
+/* Attachments inside bubbles */
+.attachments{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.att{padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:8px;background:rgba(255,255,255,.08)}
+.att a{color:#fff;text-decoration:none}
+.att img{display:block;max-width:180px;max-height:140px;border-radius:8px}
 
 /* Footer (pinned) */
 footer{position:sticky;bottom:0;z-index:20;background:var(--glassStrong);backdrop-filter:blur(8px);border-top:1px solid rgba(255,255,255,.12)}
 .footerInner{max-width:var(--maxw);margin:0 auto;padding:10px 16px}
-.row{display:flex;gap:8px;align-items:center;width:100%}
+.rowCtl{display:flex;gap:8px;align-items:center;width:100%}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff;cursor:pointer;white-space:nowrap}
 .btn.primary{background:var(--accent);color:#000;border:none;font-weight:700}
 input[type=text]{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff}
@@ -111,9 +124,8 @@ input[type=text]{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rg
   <header>
     <button class="hamburger" id="hamburger">☰</button>
     <div class="crest" aria-label="Lucidian Crest">
-      <!-- gold crest you liked -->
       <svg viewBox="0 0 200 200" role="img" xmlns="http://www.w3.org/2000/svg">
-        <circle class="glow" cx="100" cy="100" r="86" />
+        <circle class="glow" cx="100" cy="100" r="86"/>
         <g transform="translate(100,100)">
           <defs><path id="petal" d="M0,-80 C22,-80 40,-62 40,-40 C40,-18 22,0 0,0 C-22,0 -40,-18 -40,-40 C-40,-62 -22,-80 0,-80 Z"/></defs>
           <g opacity="0.95">
@@ -152,7 +164,7 @@ input[type=text]{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rg
   <!-- FOOTER -->
   <footer>
     <div class="footerInner">
-      <div class="row">
+      <div class="rowCtl">
         <label class="btn" for="file" id="attachLabel">📎 Attach</label>
         <input id="file" type="file" multiple hidden/>
         <button class="btn" id="mic" title="Dictate (stays on until you stop)">🎤 Mic</button>
@@ -171,9 +183,7 @@ input[type=text]{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rg
       <h2>Lucidian — Voice Call</h2>
       <button class="btn" id="closeModal">Close</button>
     </div>
-    <div class="controls">
-      <button class="btn primary" id="callToggle">Start call</button>
-    </div>
+    <div class="controls"><button class="btn primary" id="callToggle">Start call</button></div>
     <div class="wave" id="wave"></div>
     <p style="opacity:.8;margin-top:8px">While call is on: your mic transcribes and auto‑sends on pauses; Lucidian speaks replies.</p>
   </div>
@@ -206,42 +216,97 @@ hamburger&&(hamburger.onclick=()=> sidebar.classList.contains('open') ? closeSid
 shade.onclick=closeSidebar;
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeSidebar(); modal.classList.remove('open'); stopCall(); }});
 
-/* Conversations */
+/* Conversations (backward-compatible with old messages) */
 let conversations=JSON.parse(localStorage.getItem('lucidian_convs')||'[]');
 let activeId=localStorage.getItem('lucidian_active')||null;
 function save(){localStorage.setItem('lucidian_convs',JSON.stringify(conversations))}
 function setActive(id){activeId=id;localStorage.setItem('lucidian_active',id);list();render();if(window.innerWidth<900)closeSidebar();}
 function createConversation(){const id=Date.now().toString();conversations.unshift({id,title:'New Conversation',messages:[{role:'lucidian',text:'Hello, Ky.'}]});save();setActive(id)}
-function bubble(role,text){const d=document.createElement('div');d.className='message '+(role==='user'?'user':'lucidian');d.textContent=text;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight}
-function render(){msgs.innerHTML='';const c=conversations.find(x=>x.id===activeId);if(!c)return;c.messages.forEach(m=>bubble(m.role,m.text))}
-function list(filter=''){convList.innerHTML='';conversations.filter(c=>c.title.toLowerCase().includes(filter.toLowerCase())||c.messages.some(m=>m.text.toLowerCase().includes(filter.toLowerCase()))).forEach(c=>{const line=document.createElement('div');line.className='conv'+(c.id===activeId?' active':'');const span=document.createElement('span');span.textContent=c.title;span.style.flex='1';const sel=document.createElement('button');sel.className='select';sel.textContent='Select';sel.onclick=()=>setActive(c.id);line.appendChild(span);line.appendChild(sel);convList.appendChild(line)})}
-function add(role,text){const c=conversations.find(x=>x.id===activeId);if(!c)return;c.messages.push({role,text});if(c.title==='New Conversation'&&role==='user'&&text.trim()){c.title=text.slice(0,42)+(text.length>42?'…':'')}save();render()}
+
+/* Render bubbles (auto width) + attachments */
+function addRow(role, text, attachments){
+  const row=document.createElement('div'); row.className='row '+(role==='user'?'user':'lucidian');
+  const bubble=document.createElement('div'); bubble.className='bubble';
+  if(text){ bubble.textContent=text; }
+  if(attachments && attachments.length){
+    const wrap=document.createElement('div'); wrap.className='attachments';
+    attachments.forEach(att=>{
+      const slot=document.createElement('div'); slot.className='att';
+      if(att.type && att.type.startsWith('image/')){
+        const img=new Image(); img.src=att.url; img.alt=att.name; slot.appendChild(img);
+      }else{
+        const a=document.createElement('a'); a.href=att.url; a.download=att.name; a.textContent=att.name; slot.appendChild(a);
+      }
+      wrap.appendChild(slot);
+    });
+    bubble.appendChild(wrap);
+  }
+  row.appendChild(bubble); msgs.appendChild(row); msgs.scrollTop=msgs.scrollHeight;
+}
+
+function render(){
+  msgs.innerHTML='';
+  const c=conversations.find(x=>x.id===activeId); if(!c) return;
+  c.messages.forEach(m=> addRow(m.role, m.text||'', m.attachments||[]));
+}
+
+function list(filter=''){
+  convList.innerHTML='';
+  conversations.filter(c=>c.title.toLowerCase().includes(filter.toLowerCase())||c.messages.some(m=>(m.text||'').toLowerCase().includes(filter.toLowerCase()))).forEach(c=>{
+    const line=document.createElement('div'); line.className='conv'+(c.id===activeId?' active':'');
+    const span=document.createElement('span'); span.textContent=c.title; span.style.flex='1';
+    const sel=document.createElement('button'); sel.className='select'; sel.textContent='Select'; sel.onclick=()=>setActive(c.id);
+    line.appendChild(span); line.appendChild(sel); convList.appendChild(line);
+  });
+}
+
+function add(role, text, attachments){
+  const c=conversations.find(x=>x.id===activeId); if(!c) return;
+  c.messages.push({role, text, attachments});
+  if(c.title==='New Conversation' && role==='user' && text && text.trim()){ c.title=text.slice(0,42)+(text.length>42?'…':''); }
+  save(); render();
+}
 
 /* Echo reply (placeholder) */
-async function reply(userText){const chunks=["Echoing ","intention: ",userText||'listening.'];const c=conversations.find(x=>x.id===activeId);if(!c)return;let last=c.messages[c.messages.length-1];if(!(last&&last.role==='lucidian')){c.messages.push({role:'lucidian',text:''});last=c.messages[c.messages.length-1]}for(const ch of chunks){last.text+=ch;save();render();await new Promise(res=>setTimeout(res,55))}if(callActive&&'speechSynthesis'in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(last.text))}}
+async function reply(userText){
+  const c=conversations.find(x=>x.id===activeId); if(!c) return;
+  let last=c.messages[c.messages.length-1];
+  if(!(last && last.role==='lucidian')){ c.messages.push({role:'lucidian',text:''}); last=c.messages[c.messages.length-1]; }
+  const chunks=["Echoing ","intention: ", userText||'listening.'];
+  for(const ch of chunks){ last.text=(last.text||'')+ch; save(); render(); await new Promise(res=>setTimeout(res,55)); }
+  if(callActive && 'speechSynthesis' in window){ speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(last.text)); }
+}
 
-/* Attachments: pick → label shows count → send to post */
+/* Attachments: pick → label shows count → Send posts previews */
 let pendingFiles=[];
 file.addEventListener('change',()=>{
   pendingFiles=[...file.files];
   attachLabel.textContent = pendingFiles.length ? `📎 Attach (${pendingFiles.length})` : '📎 Attach';
 });
-function addAttachmentsIfAny(){
-  if(!pendingFiles.length) return false;
-  const names=pendingFiles.map(f=>f.name).join(', ');
-  add('user', `Attached: ${names}`);
+
+async function filesToAttachments(files){
+  return Promise.all([...files].map(f=>{
+    const url=URL.createObjectURL(f);
+    return {name:f.name,type:f.type,url};
+  }));
+}
+
+async function maybePostAttachments(){
+  if(!pendingFiles.length) return null;
+  const atts=await filesToAttachments(pendingFiles);
   pendingFiles=[]; file.value=''; attachLabel.textContent='📎 Attach';
-  return true;
+  return atts;
 }
 
 /* Send */
 send.onclick=async ()=>{
   const text=input.value.trim();
-  const hadFiles=addAttachmentsIfAny();
-  if(!text && !hadFiles) return;
+  const atts=await maybePostAttachments();
+  if(!text && !atts) return;
+  if(atts) add('user','',atts);
   if(text){ add('user',text); }
   input.value='';
-  await reply(text||'(files)');
+  await reply(text || (atts ? '(attachments)' : ''));
 };
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send.click()}})
 
@@ -258,20 +323,11 @@ function startMic(){
   micActive=true; mic.textContent='■ Stop';
   rec.onresult=e=>{const t=e.results[e.results.length-1][0].transcript||''; input.value=t.trim()};
   rec.onerror=e=>{
-    // keep running through “no-speech” and similar pauses
     if(micActive && (e.error==='no-speech'||e.error==='network'||e.error==='audio-capture')){
-      try{ rec.stop(); }catch{}
-      setTimeout(()=>{ try{ rec.start(); }catch{} }, 250);
+      try{ rec.stop(); }catch{} setTimeout(()=>{ try{ rec.start(); }catch{} }, 250);
     }
   };
-  rec.onend=()=>{
-    if(micActive){
-      // Chrome often ends on long silence; restart
-      setTimeout(()=>{ try{ rec.start(); }catch{} }, 150);
-    }else{
-      mic.textContent='🎤 Mic';
-    }
-  };
+  rec.onend=()=>{ if(micActive){ setTimeout(()=>{ try{ rec.start(); }catch{} }, 150); } else { mic.textContent='🎤 Mic'; } };
   try{ rec.start(); }catch{}
 }
 function stopMic(){ micActive=false; try{rec&&rec.stop()}catch{} mic.textContent='🎤 Mic' }
@@ -285,7 +341,7 @@ for(let i=0;i<70;i++){const b=document.createElement('div');b.className='bar';b.
 let callActive=false, callRec=null;
 function startCall(){const R=ensureSR(); if(!R){alert('Speech Recognition not supported in this browser. Use Chrome or Edge.');return}
   callActive=true; callToggle.textContent='Stop call'; callRec=new R(); callRec.lang='en-US'; callRec.interimResults=true; callRec.continuous=true;
-  callRec.onresult=e=>{let final=''; for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i]; if(r.isFinal) final+=r[0].transcript} final=final.trim(); if(final){ add('user',final); reply(final); } };
+  callRec.onresult=e=>{let final=''; for(let i=e.resultIndex;i<e.results.length;i++){const rr=e.results[i]; if(rr.isFinal) final+=rr[0].transcript} final=final.trim(); if(final){ add('user',final); reply(final); } };
   callRec.onerror=()=>{ if(callActive){ try{callRec.stop()}catch{} setTimeout(()=>{ try{callRec.start()}catch{} }, 250); } };
   callRec.onend=()=>{ if(callActive){ setTimeout(()=>{ try{callRec.start()}catch{} }, 150); } };
   speechSynthesis.cancel(); try{callRec.start()}catch{}
