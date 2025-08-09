@@ -20,6 +20,7 @@
     radial-gradient(1200px 800px at 70% 30%, rgba(0,120,255,.10), transparent 60%),
     radial-gradient(900px 700px at 20% 70%, rgba(0,200,255,.08), transparent 60%),
     radial-gradient(600px 600px at 50% 50%, rgba(120,180,255,.06), transparent 70%), #000}
+  /* Immediate star speckles (no delay) */
   .space:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.95;background-image:
     radial-gradient(1px 1px at 8% 12%, #fff 99%, transparent),
     radial-gradient(1px 1px at 16% 28%, #dfe9ff 99%, transparent),
@@ -48,17 +49,28 @@
 
   /* —— LAYOUT —— */
   .app{display:grid;grid-template-columns: var(--sidebar-w) 1fr;grid-template-rows:auto 1fr auto;height:100svh}
-  header{grid-column:1/3;display:grid;grid-template-columns:1fr 220px;align-items:center;padding:6px 12px;background:var(--glass-strong);backdrop-filter:blur(8px)}
-  h1{grid-column:1/2;justify-self:center;margin:2px 0 0;letter-spacing:12px;font-size:2.8rem;line-height:1;color:var(--accent);text-shadow:0 0 12px rgba(232,198,106,.45);white-space:nowrap}
-  .crest{grid-column:2/3;justify-self:end;width:150px;margin-right:6px}
+  header{grid-column:1/3;display:grid;grid-template-columns:auto 1fr 260px;align-items:center;padding:8px 12px;background:var(--glass-strong);backdrop-filter:blur(8px);gap:8px}
+  /* account / hamburger */
+  .leftHead{display:flex;align-items:center;gap:8px}
+  .hamburger{display:none;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;border-radius:8px;padding:8px 10px;cursor:pointer}
+  .account{position:relative}
+  .account>button{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;border-radius:8px;padding:8px 10px;cursor:pointer}
+  .acct-menu{position:absolute;left:0;top:calc(100% + 6px);min-width:220px;background:var(--glass-strong);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:8px;display:none;z-index:20}
+  .acct-menu.open{display:block}
+  .acct-menu .row{display:flex;gap:8px;margin:6px 0}
+  .acct-menu input, .acct-menu select{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff}
+
+  h1{grid-column:2/3;justify-self:center;margin:4px 0 0;letter-spacing:14px;font-size:3.4rem;line-height:1;color:var(--accent);text-shadow:0 0 12px rgba(232,198,106,.45);white-space:nowrap}
+  .crest{grid-column:3/4;justify-self:end;width:190px;margin-right:6px}
   .crest svg{width:100%;height:auto;display:block;filter:drop-shadow(0 0 10px rgba(232,198,106,.45))}
   .crest path{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round}
   .crest .glow{stroke:rgba(232,198,106,.35);stroke-width:4;filter:blur(1px)}
+
   aside{grid-row:2/4;background:var(--glass-strong);backdrop-filter:blur(8px);padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0;overflow:hidden}
   .stack{display:flex;flex-direction:column;gap:8px}
   .new-chat{padding:10px;border:none;border-radius:8px;background:var(--accent);color:#000;font-weight:700;cursor:pointer}
-  .row{display:flex;gap:8px}
   .label{opacity:.9;font-weight:700}
+  .row{display:flex;gap:8px}
   .search input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff}
   .search button{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff;cursor:pointer}
   .list{overflow:auto;border:1px solid rgba(255,255,255,.15);border-radius:10px;background:rgba(255,255,255,.06)}
@@ -66,25 +78,26 @@
   .conv.active{background:rgba(255,255,255,.12)}
   .conv .select{border:none;border-radius:6px;padding:4px 8px;background:var(--accent);color:#000;cursor:pointer;white-space:nowrap;flex-shrink:0}
   .conv span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+
   main{position:relative;overflow:auto;padding:16px}
 
   /* —— CHAT BUBBLES —— */
   .msg-wrap{position:relative;display:flex}
-  .message{display:inline-block;max-width:min(var(--bubble-max),68vw);padding:12px 16px;margin:10px 0;border-radius:14px;line-height:1.45;word-wrap:break-word;overflow-wrap:anywhere;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff}
+  .message{display:inline-block;max-width:min(var(--bubble-max),68vw);padding:12px 16px;margin:12px 0;border-radius:14px;line-height:1.45;word-wrap:break-word;overflow-wrap:anywhere;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff}
   .left{margin-right:auto;border-color:var(--accent);background:var(--accent-soft);color:var(--accent);box-shadow:0 0 12px rgba(232,198,106,.18)}
   .right{margin-left:auto}
   .attachments{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
   .thumb{width:140px;height:100px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center}
   .thumb img{max-width:100%;max-height:100%;display:block}
 
-  /* —— HOVER TOOLS —— */
+  /* —— HOVER / TAP TOOLS —— */
   .msg-tools{
     position:absolute;top:-8px;right:0;transform:translateY(-100%);
     display:flex;gap:6px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.25);
     padding:4px 6px;border-radius:8px;opacity:0;pointer-events:none;transition:.12s;
-    backdrop-filter:blur(4px)
+    backdrop-filter:blur(4px);z-index:5
   }
-  .msg-wrap:hover .msg-tools{opacity:1;pointer-events:auto}
+  .msg-wrap:hover .msg-tools, .msg-wrap.pinned .msg-tools{opacity:1;pointer-events:auto}
   .tool-btn{border:none;border-radius:6px;padding:4px 6px;background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-size:.85rem}
   .tool-btn:hover{background:rgba(255,255,255,.18)}
   .msg-wrap.leftside .msg-tools{left:0;right:auto}
@@ -105,19 +118,18 @@
   .lib-item a{color:var(--accent);text-decoration:none}
   .edit-area{width:min(760px,90vw);height:180px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;padding:12px;resize:vertical}
 
-  /* —— MOBILE —— */
+  /* —— MOBILE / TABLET —— */
   @media (max-width: 900px){
     :root{ --sidebar-w: 82vw; }
     .app{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
     aside{position:fixed;z-index:11;left:0;top:0;bottom:0;width:var(--sidebar-w);transform:translateX(-100%);transition:.2s ease;box-shadow:8px 0 30px rgba(0,0,0,.6)}
     aside.open{transform:none}
-    .openHist{position:fixed;left:10px;top:10px;z-index:12;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;border-radius:8px;padding:8px 10px;cursor:pointer;display:block}
-    h1{font-size:2.1rem;letter-spacing:10px}
-    .crest{width:128px}
-    .message{max-width:90vw}
+    .hamburger{display:inline-block}
     footer{grid-column:1/2}
+    .message{max-width:90vw}
+    h1{font-size:2.2rem;letter-spacing:12px}
+    .crest{width:150px}
   }
-  .openHist{display:none}
 </style>
 </head>
 <body>
@@ -125,11 +137,46 @@
     <div class="stars"></div><div class="stars2"></div><div class="nebula"></div>
   </div>
 
-  <button class="openHist" id="openHist">History</button>
-
   <div class="app">
     <header>
+      <div class="leftHead">
+        <button class="hamburger" id="hamburger">☰</button>
+        <div class="account">
+          <button id="acctBtn">Account ▾</button>
+          <div class="acct-menu" id="acctMenu">
+            <div id="acctNotSigned">
+              <div class="label">Sign up</div>
+              <div class="row"><input id="suName" placeholder="Name" /></div>
+              <div class="row"><input id="suEmail" placeholder="Email" type="email" /></div>
+              <div class="row"><input id="suPhone" placeholder="Phone" /></div>
+              <div class="row"><input id="suPass" placeholder="Password" type="password" /></div>
+              <div class="row"><button class="btn primary" id="doSignup">Create account</button></div>
+              <hr />
+              <div class="label">Log in</div>
+              <div class="row"><input id="liEmail" placeholder="Email" type="email" /></div>
+              <div class="row"><input id="liPass" placeholder="Password" type="password" /></div>
+              <div class="row"><button class="btn primary" id="doLogin">Log in</button></div>
+            </div>
+            <div id="acctSigned" style="display:none">
+              <div class="label">Profile</div>
+              <div class="row"><input id="pfName" placeholder="Name" /></div>
+              <div class="row"><input id="pfEmail" placeholder="Email" disabled /></div>
+              <div class="row"><input id="pfPhone" placeholder="Phone" /></div>
+              <div class="row"><select id="pfLang">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+              </select></div>
+              <div class="row"><button class="btn primary" id="saveProfile">Save</button></div>
+              <div class="row"><button class="btn" id="viewMemories">View memories</button><button class="btn" id="logout">Log out</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <h1>L U C I D I A N</h1>
+
       <div class="crest" aria-label="Lucidian Crest" title="Lucidian symbol">
         <svg viewBox="0 0 200 200" role="img" xmlns="http://www.w3.org/2000/svg">
           <circle class="glow" cx="100" cy="100" r="86" />
@@ -213,17 +260,27 @@
     </div>
   </div>
 
+  <!-- Memories Modal -->
+  <div class="modal" id="memModal">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h2>Saved Memories</h2><button class="btn" id="closeMem">Close</button>
+      </div>
+      <div id="memBody"></div>
+    </div>
+  </div>
+
 <script>
 /* ---------- STARS ---------- */
 function rand(n){return Math.floor(Math.random()*n)}
 function makeStars(count){const a=[];for(let i=0;i<count;i++){const x=rand(2000)+"px "+rand(4000)+"px ";const c=Math.random();const col=c>.7?'#fff':(c>.4?'#dfe9ff':'#bcd8ff');a.push(x+col);}return a.join(', ')}
 const root=document.documentElement;
-root.style.setProperty('--starsA', makeStars(600));
-root.style.setProperty('--starsB', makeStars(600));
-root.style.setProperty('--starsC', makeStars(600));
-root.style.setProperty('--starsD', makeStars(700));
-root.style.setProperty('--starsE', makeStars(700));
-root.style.setProperty('--starsF', makeStars(700));
+root.style.setProperty('--starsA', makeStars(700));
+root.style.setProperty('--starsB', makeStars(700));
+root.style.setProperty('--starsC', makeStars(700));
+root.style.setProperty('--starsD', makeStars(800));
+root.style.setProperty('--starsE', makeStars(800));
+root.style.setProperty('--starsF', makeStars(800));
 
 /* ---------- STATE ---------- */
 const chatEl=document.getElementById('chat');
@@ -236,7 +293,7 @@ const newChatBtn=document.getElementById('newChat');
 const searchEl=document.getElementById('search');
 const searchBtn=document.getElementById('searchBtn');
 const sidebar=document.getElementById('sidebar');
-const openHist=document.getElementById('openHist');
+const hamburger=document.getElementById('hamburger');
 
 const libModal=document.getElementById('libModal');
 const libGrid=document.getElementById('libGrid');
@@ -248,10 +305,77 @@ const editArea=document.getElementById('editArea');
 document.getElementById('cancelEdit').onclick=()=>{ editModal.classList.remove('open'); editingKey=null; };
 document.getElementById('saveEdit').onclick=saveEditedMessage;
 
+const memModal=document.getElementById('memModal');
+document.getElementById('closeMem').onclick=()=> memModal.classList.remove('open');
+
 let conversations=JSON.parse(localStorage.getItem('lucidian_convs')||'[]');
 let activeId=localStorage.getItem('lucidian_active')||null;
 let pendingFiles=[];
 let editingKey=null; // {id, idx}
+
+/* ---------- Accounts (local-only demo) ---------- */
+const acctBtn=document.getElementById('acctBtn');
+const acctMenu=document.getElementById('acctMenu');
+const acctNot=document.getElementById('acctNotSigned');
+const acctYes=document.getElementById('acctSigned');
+const fields={
+  suName:document.getElementById('suName'),
+  suEmail:document.getElementById('suEmail'),
+  suPhone:document.getElementById('suPhone'),
+  suPass:document.getElementById('suPass'),
+  liEmail:document.getElementById('liEmail'),
+  liPass:document.getElementById('liPass'),
+  pfName:document.getElementById('pfName'),
+  pfEmail:document.getElementById('pfEmail'),
+  pfPhone:document.getElementById('pfPhone'),
+  pfLang:document.getElementById('pfLang'),
+};
+function getAccounts(){return JSON.parse(localStorage.getItem('lucidian_accounts')||'{}');}
+function setAccounts(a){localStorage.setItem('lucidian_accounts', JSON.stringify(a));}
+function getSession(){return JSON.parse(localStorage.getItem('lucidian_session')||'null');}
+function setSession(s){localStorage.setItem('lucidian_session', JSON.stringify(s));refreshAccountUI();}
+function refreshAccountUI(){
+  const s=getSession();
+  acctMenu.classList.remove('open');
+  if(s&&s.email){
+    acctNot.style.display='none'; acctYes.style.display='';
+    const a=getAccounts()[s.email]; fields.pfName.value=a.name||''; fields.pfEmail.value=a.email||''; fields.pfPhone.value=a.phone||''; fields.pfLang.value=a.lang||'en';
+    acctBtn.textContent=`${a.name||a.email} ▾`;
+  }else{
+    acctNot.style.display=''; acctYes.style.display='none';
+    acctBtn.textContent='Account ▾';
+  }
+}
+acctBtn.onclick=(e)=>{e.stopPropagation(); acctMenu.classList.toggle('open');};
+document.addEventListener('click',(e)=>{ if(!acctMenu.contains(e.target) && e.target!==acctBtn){ acctMenu.classList.remove('open'); }});
+
+document.getElementById('doSignup').onclick=()=>{
+  const name=fields.suName.value.trim(), email=fields.suEmail.value.trim().toLowerCase(), phone=fields.suPhone.value.trim(), pass=fields.suPass.value;
+  if(!email||!pass){ alert('Email and password required.'); return; }
+  const acc=getAccounts(); if(acc[email]){ alert('Account already exists. Log in instead.'); return; }
+  acc[email]={name,email,phone,pass,lang:'en',memories:[]}; setAccounts(acc); setSession({email});
+  alert('Account created locally.'); refreshAccountUI();
+};
+document.getElementById('doLogin').onclick=()=>{
+  const email=fields.liEmail.value.trim().toLowerCase(), pass=fields.liPass.value;
+  const acc=getAccounts(); if(!acc[email]||acc[email].pass!==pass){ alert('Invalid email or password.'); return; }
+  setSession({email}); alert('Logged in.'); refreshAccountUI();
+};
+document.getElementById('saveProfile').onclick=()=>{
+  const s=getSession(); if(!s) return;
+  const acc=getAccounts(); const a=acc[s.email]; if(!a) return;
+  a.name=fields.pfName.value.trim(); a.phone=fields.pfPhone.value.trim(); a.lang=fields.pfLang.value; setAccounts(acc); alert('Saved.');
+  acctBtn.textContent=`${a.name||a.email} ▾`;
+};
+document.getElementById('logout').onclick=()=>{ setSession(null); alert('Logged out.'); };
+document.getElementById('viewMemories').onclick=()=>{
+  const s=getSession(); if(!s) return;
+  const acc=getAccounts()[s.email]; const body=document.getElementById('memBody');
+  const mems=acc?.memories||[];
+  if(!mems.length){ body.innerHTML='<div style="opacity:.8">No memories saved yet.</div>'; }
+  else{ body.innerHTML=mems.map(m=>`<div style="padding:8px;border:1px solid rgba(255,255,255,.2);border-radius:10px;margin:6px 0">${m}</div>`).join(''); }
+  memModal.classList.add('open');
+};
 
 /* ---------- helpers ---------- */
 function save(){localStorage.setItem('lucidian_convs', JSON.stringify(conversations));}
@@ -260,7 +384,7 @@ function createConversation(){const id=Date.now().toString();conversations.unshi
 function renderList(filter=''){convList.innerHTML='';conversations.filter(c=>(c.title||'').toLowerCase().includes(filter.toLowerCase())||(c.messages||[]).some(m=>(m.text||'').toLowerCase().includes(filter.toLowerCase()))).forEach(c=>{const d=document.createElement('div');d.className='conv'+(c.id===activeId?' active':'');const span=document.createElement('span');span.textContent=c.title||'Untitled';span.style.flex='1';const sel=document.createElement('button');sel.textContent='Select';sel.className='select';sel.onclick=()=>setActive(c.id);d.appendChild(span);d.appendChild(sel);convList.appendChild(d);});}
 
 function speak(text){ if(!text) return; try{ if('speechSynthesis' in window){ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); speechSynthesis.speak(u);} }catch{} }
-async function copyText(text){ try{ await navigator.clipboard.writeText(text||''); }catch(e){ /* ignore */ } }
+async function copyText(text){ try{ await navigator.clipboard.writeText(text||''); }catch(e){} }
 
 /* ---------- build bubble + tools ---------- */
 function msgToolsHTML(role, idx){
@@ -285,6 +409,8 @@ function bubbleDOM(text, side, files, idx, role){
     });
     d.appendChild(at);
   }
+  // tap to pin tools (mobile)
+  d.addEventListener('click',()=>{ wrap.classList.toggle('pinned'); });
   wrap.appendChild(d);
   return wrap;
 }
@@ -310,7 +436,7 @@ function buildLibrary(){
     if(item.type?.startsWith('image/')){const img=document.createElement('img');img.src=item.url;d.appendChild(img);}
     const meta=document.createElement('div');
     meta.innerHTML=`<div>${item.name||'file'}</div><div style="opacity:.8">in <em>${item.conv}</em></div>
-      <div><a href="${item.url}" target="_blank" download="${item.name||'file'}">Download</a></div>`;
+      <div style="margin-top:6px;"><a href="${item.url}" target="_blank">Open</a> · <a href="${item.url}" download="${item.name||'file'}">Download</a></div>`;
     d.appendChild(meta); libGrid.appendChild(d);
   });
 }
@@ -349,10 +475,10 @@ sendBtn.onclick=async ()=>{
 inputEl.addEventListener('keydown',(e)=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendBtn.click(); }});
 
 /* ---------- Sidebar & mobile ---------- */
+hamburger.onclick=()=> sidebar.classList.toggle('open');
 newChatBtn.onclick=createConversation;
 searchBtn.onclick=()=>renderList(searchEl.value);
 searchEl.addEventListener('keydown',e=>{ if(e.key==='Enter'){ renderList(searchEl.value); }});
-openHist.onclick=()=>sidebar.classList.toggle('open');
 
 /* ---------- Hover tool actions (copy / edit / read) ---------- */
 chatEl.addEventListener('click', (e)=>{
@@ -375,7 +501,6 @@ function saveEditedMessage(){
   const conv=conversations.find(c=>c.id===editingKey.id); if(!conv) return;
   const msg=conv.messages[editingKey.idx]; if(!msg || msg.role!=='user') return;
   msg.text = editArea.value||'';
-  // keep title fresh if it was first user message
   if(editingKey.idx===0 && conv.title && conv.title!=='New Conversation'){
     conv.title = msg.text.slice(0,42)+(msg.text.length>42?'…':'');
   }
@@ -399,7 +524,7 @@ if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
   recognition=new SR(); recognition.lang='en-US'; recognition.continuous=true; recognition.interimResults=true;
   recognition.onresult=(e)=>{ let final=''; for(let i=0;i<e.results.length;i++){ const r=e.results[i]; if(r.isFinal) final+=r[0].transcript; }
     if(final){ inputEl.value=(inputEl.value?'':'')+final; } };
-  recognition.onend=()=>{ if(callActive){ recognition.start(); } else { recognizing=false; } };
+  recognition.onend=()=>{ if(callActive){ recognition.start(); } else { recognizing=false; micBtn.classList.remove('on'); } };
 }
 /* Mic = manual dictate only (no auto-send, no clearing) */
 micBtn.onclick=()=>{ if(!recognition){ alert('Speech Recognition not supported in this browser.'); return; }
@@ -423,8 +548,9 @@ const mBlob=new Blob([JSON.stringify(manifest)],{type:'application/json'}); cons
 const link=document.createElement('link'); link.rel='manifest'; link.href=mUrl; document.head.appendChild(link);
 
 /* ---------- Boot ---------- */
-if(!activeId && conversations.length){ activeId=conversations[0].id; }
-if(!conversations.length){ createConversation(); } else { renderList(); renderChat(); }
+function firstRender(){ if(!activeId && conversations.length){ activeId=conversations[0].id; }
+if(!conversations.length){ createConversation(); } else { renderList(); renderChat(); } refreshAccountUI(); }
+firstRender();
 </script>
 </body>
 </html>
