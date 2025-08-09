@@ -38,7 +38,7 @@ body{margin:0;background:#000;color:var(--text);font-family:'Montserrat',system-
 /* App layout */
 .app{min-height:100svh;display:grid;grid-template-rows:auto 1fr auto}
 
-/* Header: crest centered, name under */
+/* Header */
 header{position:sticky;top:0;z-index:20;text-align:center;padding:14px 12px 6px;background:var(--glassStrong);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.12)}
 .hamburger{position:absolute;left:12px;top:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:8px 10px;cursor:pointer;display:none}
 .crest{width:92px;margin:0 auto}
@@ -47,7 +47,7 @@ header{position:sticky;top:0;z-index:20;text-align:center;padding:14px 12px 6px;
 .crest .glow{stroke:rgba(232,198,106,.35);stroke-width:4;filter:blur(1px)}
 h1{margin:6px 0 0;letter-spacing:8px;font-size:1.25rem;color:var(--accent);text-shadow:0 0 12px rgba(232,198,106,.45);font-weight:700}
 
-/* Content: left sidebar + free chat area */
+/* Content */
 .content{max-width:var(--maxw);margin:8px auto 0;padding:0 16px;display:grid;grid-template-columns:300px 1fr;gap:14px;min-height:0}
 @media(max-width:900px){.content{grid-template-columns:1fr}}
 .sidebar{
@@ -71,19 +71,20 @@ h1{margin:6px 0 0;letter-spacing:8px;font-size:1.25rem;color:var(--accent);text-
 .conv.active{background:rgba(255,255,255,.12)}
 .conv .select{border:none;border-radius:6px;padding:4px 8px;background:var(--accent);color:#000;cursor:pointer}
 
-/* Chat area = only bubbles */
+/* Chat area (only bubbles) */
 .chatArea{min-height:0;display:flex;flex-direction:column}
-.msgs{flex:1;overflow:auto;padding:8px 8px 14vh; /* extra pad so bubbles never hide under footer */}
+.msgs{flex:1;overflow:auto;padding:8px 8px 14vh;overscroll-behavior:contain}
 .message{
   max-width:min(780px,92%); padding:12px 16px; margin:10px 0; border-radius:12px; line-height:1.45;
   background:rgba(255,255,255,.10); backdrop-filter:blur(2px);
-  /* keep long strings inside bubble */
-  white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere;
+  white-space:pre-wrap;             /* keep \n */
+  overflow-wrap:anywhere;           /* break very long strings */
+  word-break:break-word;            /* avoid horizontal scroll */
 }
 .message.lucidian{border:1px solid var(--accent);color:var(--accent);background:var(--accentSoft);box-shadow:0 0 12px rgba(232,198,106,.18); margin-right:auto; text-align:left}
 .message.user{border:1px solid rgba(255,255,255,.7);color:#fff; margin-left:auto; text-align:right}
 
-/* Footer pinned */
+/* Footer (pinned) */
 footer{position:sticky;bottom:0;z-index:20;background:var(--glassStrong);backdrop-filter:blur(8px);border-top:1px solid rgba(255,255,255,.12)}
 .footerInner{max-width:var(--maxw);margin:0 auto;padding:10px 16px}
 .row{display:flex;gap:8px;align-items:center;width:100%}
@@ -110,22 +111,16 @@ input[type=text]{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rg
   <header>
     <button class="hamburger" id="hamburger">☰</button>
     <div class="crest" aria-label="Lucidian Crest">
-      <!-- Crest you liked: gold circle + 24 rotated petals -->
+      <!-- gold crest you liked -->
       <svg viewBox="0 0 200 200" role="img" xmlns="http://www.w3.org/2000/svg">
         <circle class="glow" cx="100" cy="100" r="86" />
         <g transform="translate(100,100)">
-          <defs>
-            <path id="petal" d="M0,-80 C22,-80 40,-62 40,-40 C40,-18 22,0 0,0 C-22,0 -40,-18 -40,-40 C-40,-62 -22,-80 0,-80 Z" />
-          </defs>
+          <defs><path id="petal" d="M0,-80 C22,-80 40,-62 40,-40 C40,-18 22,0 0,0 C-22,0 -40,-18 -40,-40 C-40,-62 -22,-80 0,-80 Z"/></defs>
           <g opacity="0.95">
-            <use href="#petal" transform="rotate(0)"/><use href="#petal" transform="rotate(15)"/><use href="#petal" transform="rotate(30)"/>
-            <use href="#petal" transform="rotate(45)"/><use href="#petal" transform="rotate(60)"/><use href="#petal" transform="rotate(75)"/>
-            <use href="#petal" transform="rotate(90)"/><use href="#petal" transform="rotate(105)"/><use href="#petal" transform="rotate(120)"/>
-            <use href="#petal" transform="rotate(135)"/><use href="#petal" transform="rotate(150)"/><use href="#petal" transform="rotate(165)"/>
-            <use href="#petal" transform="rotate(180)"/><use href="#petal" transform="rotate(195)"/><use href="#petal" transform="rotate(210)"/>
-            <use href="#petal" transform="rotate(225)"/><use href="#petal" transform="rotate(240)"/><use href="#petal" transform="rotate(255)"/>
-            <use href="#petal" transform="rotate(270)"/><use href="#petal" transform="rotate(285)"/><use href="#petal" transform="rotate(300)"/>
-            <use href="#petal" transform="rotate(315)"/><use href="#petal" transform="rotate(330)"/><use href="#petal" transform="rotate(345)"/>
+            <use href="#petal" transform="rotate(0)"/><use href="#petal" transform="rotate(15)"/><use href="#petal" transform="rotate(30)"/><use href="#petal" transform="rotate(45)"/><use href="#petal" transform="rotate(60)"/><use href="#petal" transform="rotate(75)"/>
+            <use href="#petal" transform="rotate(90)"/><use href="#petal" transform="rotate(105)"/><use href="#petal" transform="rotate(120)"/><use href="#petal" transform="rotate(135)"/><use href="#petal" transform="rotate(150)"/><use href="#petal" transform="rotate(165)"/>
+            <use href="#petal" transform="rotate(180)"/><use href="#petal" transform="rotate(195)"/><use href="#petal" transform="rotate(210)"/><use href="#petal" transform="rotate(225)"/><use href="#petal" transform="rotate(240)"/><use href="#petal" transform="rotate(255)"/>
+            <use href="#petal" transform="rotate(270)"/><use href="#petal" transform="rotate(285)"/><use href="#petal" transform="rotate(300)"/><use href="#petal" transform="rotate(315)"/><use href="#petal" transform="rotate(330)"/><use href="#petal" transform="rotate(345)"/>
           </g>
         </g>
       </svg>
@@ -133,7 +128,7 @@ input[type=text]{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rg
     <h1>LUCIDIAN</h1>
   </header>
 
-  <!-- CLICK‑OUTSIDE SHADE for the drawer -->
+  <!-- click‑outside shade -->
   <div class="shade" id="shade"></div>
 
   <!-- CONTENT -->
@@ -148,7 +143,7 @@ input[type=text]{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rg
       <div class="list" id="convList"></div>
     </aside>
 
-    <!-- Chat area with only bubbles -->
+    <!-- Chat area -->
     <section class="chatArea">
       <div class="msgs" id="msgs"></div>
     </section>
@@ -158,7 +153,7 @@ input[type=text]{flex:1;padding:12px 14px;border-radius:10px;border:1px solid rg
   <footer>
     <div class="footerInner">
       <div class="row">
-        <label class="btn" for="file">📎 Attach</label>
+        <label class="btn" for="file" id="attachLabel">📎 Attach</label>
         <input id="file" type="file" multiple hidden/>
         <button class="btn" id="mic" title="Dictate (stays on until you stop)">🎤 Mic</button>
         <input id="text" type="text" placeholder="Type a message..."/>
@@ -197,7 +192,7 @@ root.style.setProperty('--starsE',stars(260));
 root.style.setProperty('--starsF',stars(260));
 
 /* Elements */
-const msgs=document.getElementById('msgs'), input=document.getElementById('text'), file=document.getElementById('file');
+const msgs=document.getElementById('msgs'), input=document.getElementById('text'), file=document.getElementById('file'), attachLabel=document.getElementById('attachLabel');
 const send=document.getElementById('send'), mic=document.getElementById('mic');
 const convList=document.getElementById('convList'), newChat=document.getElementById('newChat');
 const search=document.getElementById('search'), searchBtn=document.getElementById('searchBtn');
@@ -225,8 +220,29 @@ function add(role,text){const c=conversations.find(x=>x.id===activeId);if(!c)ret
 /* Echo reply (placeholder) */
 async function reply(userText){const chunks=["Echoing ","intention: ",userText||'listening.'];const c=conversations.find(x=>x.id===activeId);if(!c)return;let last=c.messages[c.messages.length-1];if(!(last&&last.role==='lucidian')){c.messages.push({role:'lucidian',text:''});last=c.messages[c.messages.length-1]}for(const ch of chunks){last.text+=ch;save();render();await new Promise(res=>setTimeout(res,55))}if(callActive&&'speechSynthesis'in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(last.text))}}
 
+/* Attachments: pick → label shows count → send to post */
+let pendingFiles=[];
+file.addEventListener('change',()=>{
+  pendingFiles=[...file.files];
+  attachLabel.textContent = pendingFiles.length ? `📎 Attach (${pendingFiles.length})` : '📎 Attach';
+});
+function addAttachmentsIfAny(){
+  if(!pendingFiles.length) return false;
+  const names=pendingFiles.map(f=>f.name).join(', ');
+  add('user', `Attached: ${names}`);
+  pendingFiles=[]; file.value=''; attachLabel.textContent='📎 Attach';
+  return true;
+}
+
 /* Send */
-send.onclick=async ()=>{const t=input.value.trim();if(!t)return;add('user',t);input.value='';await reply(t)}
+send.onclick=async ()=>{
+  const text=input.value.trim();
+  const hadFiles=addAttachmentsIfAny();
+  if(!text && !hadFiles) return;
+  if(text){ add('user',text); }
+  input.value='';
+  await reply(text||'(files)');
+};
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send.click()}})
 
 /* Search + New */
@@ -241,8 +257,22 @@ function startMic(){
   rec=new R(); rec.lang='en-US'; rec.interimResults=false; rec.continuous=true;
   micActive=true; mic.textContent='■ Stop';
   rec.onresult=e=>{const t=e.results[e.results.length-1][0].transcript||''; input.value=t.trim()};
-  rec.onend=()=>{ if(micActive){ try{rec.start()}catch{} } else { mic.textContent='🎤 Mic' } };
-  rec.start();
+  rec.onerror=e=>{
+    // keep running through “no-speech” and similar pauses
+    if(micActive && (e.error==='no-speech'||e.error==='network'||e.error==='audio-capture')){
+      try{ rec.stop(); }catch{}
+      setTimeout(()=>{ try{ rec.start(); }catch{} }, 250);
+    }
+  };
+  rec.onend=()=>{
+    if(micActive){
+      // Chrome often ends on long silence; restart
+      setTimeout(()=>{ try{ rec.start(); }catch{} }, 150);
+    }else{
+      mic.textContent='🎤 Mic';
+    }
+  };
+  try{ rec.start(); }catch{}
 }
 function stopMic(){ micActive=false; try{rec&&rec.stop()}catch{} mic.textContent='🎤 Mic' }
 mic.onclick=()=>{ micActive ? stopMic() : startMic() };
@@ -256,8 +286,9 @@ let callActive=false, callRec=null;
 function startCall(){const R=ensureSR(); if(!R){alert('Speech Recognition not supported in this browser. Use Chrome or Edge.');return}
   callActive=true; callToggle.textContent='Stop call'; callRec=new R(); callRec.lang='en-US'; callRec.interimResults=true; callRec.continuous=true;
   callRec.onresult=e=>{let final=''; for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i]; if(r.isFinal) final+=r[0].transcript} final=final.trim(); if(final){ add('user',final); reply(final); } };
-  callRec.onend=()=>{ if(callActive){ try{callRec.start()}catch{} } };
-  speechSynthesis.cancel(); callRec.start();
+  callRec.onerror=()=>{ if(callActive){ try{callRec.stop()}catch{} setTimeout(()=>{ try{callRec.start()}catch{} }, 250); } };
+  callRec.onend=()=>{ if(callActive){ setTimeout(()=>{ try{callRec.start()}catch{} }, 150); } };
+  speechSynthesis.cancel(); try{callRec.start()}catch{}
 }
 function stopCall(){ callActive=false; callToggle.textContent='Start call'; try{callRec&&callRec.stop()}catch{} speechSynthesis.cancel(); }
 callToggle.onclick=()=> callActive ? stopCall() : startCall();
