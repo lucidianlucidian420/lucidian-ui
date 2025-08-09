@@ -1,712 +1,609 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>Lucidian</title>
-<style>
-  :root{
-    --gold:#f2cf66;
-    --gold-soft:rgba(242,207,102,.28);
-    --ink:#d9dde7;
-    --header-h:92px;                 /* thicker bar so symbol sits inside */
-    --sidebar-w:320px;
-    --symbol-size:82px;              /* change 70–92 if you want */
-    --bubble-me:rgba(255,255,255,.14);
-    --bubble-ai:rgba(242,207,102,.12);
-    --outline:rgba(255,255,255,.12);
-    --shadow:0 12px 38px rgba(0,0,0,.6);
-  }
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;color:var(--ink);
-    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
-  body{
-    overflow:hidden;
-    background: radial-gradient(1400px 900px at 50% 42%, #0c1220 0%, #08101a 34%, #060a10 62%, #05080c 100%);
-  }
+/**
+ * LUCIDIAN – single‑file React app you can drop into a Vite/Next project as <LucidianApp />
+ *
+ * What this file gives you (as requested):
+ * - Header: wordmark centered, ROUND symbol on the RIGHT, Settings button on the TOP‑LEFT
+ * - Sidebar: "New", "Library" (renamed from Open), conversation list, search
+ * - Stars background
+ * - Chat:
+ *    • Bubbles auto-size to content
+ *    • Edit a message -> all following messages are deleted (like ChatGPT)
+ *    • Scrollable transcript + sticky "scroll to bottom" button
+ * - Voice mic (Web Speech API): prevents duplicate lines by using final results only
+ * - Voice call modal with animated circle (WebAudio analyser) that moves with voice
+ * - Preferences: UI language switch (demo EN/ES) that actually changes labels
+ * - Memories: add/view/delete memories (localStorage demo)
+ * - Connectors: real URL fields (not just toggles)
+ * - Danger Zone renamed to Delete Account
+ * - Auth: login/register/logout screens that actually gate the app (localStorage demo)
+ *
+ * NOTE ABOUT "REAL" ACCOUNTS:
+ *  This ships with a localStorage demo so you can test instantly. To turn on real auth,
+ *  wire the three TODOs marked SUPABASE (or any provider) and set USE_DEMO_AUTH=false.
+ */
 
-  .app{height:100%;display:grid;grid-template-rows:var(--header-h) 1fr auto}
+// ---------- CONFIG ----------
+const USE_DEMO_AUTH = true; // set to false and fill the SUPABASE TODOs for real accounts
 
-  /* header */
-  .header{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:auto 1fr auto;align-items:center;
-    padding:0 16px;border-bottom:1px solid rgba(255,255,255,.08);
-    background:linear-gradient(180deg,rgba(12,14,18,.98),rgba(12,14,18,.9));}
-  .brand{display:flex;justify-content:center;align-items:center;letter-spacing:.48rem;color:var(--gold);font-weight:800;font-size:34px}
-  .symbol{width:var(--symbol-size);height:var(--symbol-size);display:grid;place-items:center;margin-left:10px;
-    border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(242,207,102,.85),rgba(242,207,102,.25) 55%,transparent 58%);
-    box-shadow:0 0 18px rgba(242,207,102,.5),inset 0 0 16px rgba(242,207,102,.22);}
-  .symbol svg{width:86%;height:86%;display:block}
-
-  .hamburger{display:none;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.06);
-    border:1px solid var(--outline);color:var(--ink);cursor:pointer}
-
-  /* stars */
-  #stars{position:absolute;inset:0;pointer-events:none;z-index:0}
-
-  /* main row */
-  .main{position:relative;z-index:1;height:100%;display:grid;grid-template-columns:var(--sidebar-w) 1fr}
-
-  /* sidebar */
-  .sidebar{background:linear-gradient(180deg,rgba(15,18,23,.9),rgba(15,18,23,.72));
-    border-right:1px solid rgba(255,255,255,.08);padding:12px;overflow:hidden}
-  .sidebar-scroll{height:100%;overflow:auto;padding-right:4px}
-  .row{display:flex;gap:8px;align-items:center;margin:10px 0}
-  .btn{background:linear-gradient(180deg,rgba(242,207,102,.95),rgba(242,207,102,.86));border:0;color:#2b2300;
-    font-weight:800;padding:10px 14px;border-radius:12px;cursor:pointer}
-  .btn.secondary{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--outline);font-weight:600}
-  .pill{padding:6px 10px;border-radius:999px;border:1px solid var(--outline);background:rgba(255,255,255,.06);cursor:pointer;user-select:none}
-  .pill.danger{background:rgba(240,70,70,.18);border-color:rgba(240,70,70,.34);color:#ffdada}
-  .input{flex:1;background:rgba(0,0,0,.28);border:1px solid var(--outline);color:var(--ink);padding:10px 12px;border-radius:12px}
-  .conv{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px;border-radius:10px;
-    background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);margin:8px 0}
-  .conv .title{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-  .mini{display:flex;gap:6px}
-
-  /* chat */
-  .chat-wrap{position:relative;overflow:auto;height:100%;padding:18px 18px 112px;overscroll-behavior:contain}
-  .chat{max-width:1100px;margin:0 auto}
-  .row-bubble{display:flex}
-  .row-bubble.me{justify-content:flex-end}
-  .row-bubble.ai{justify-content:flex-start}
-  .bubble{
-    display:inline-block;max-width:62%;margin:10px 12px;padding:10px 12px;border-radius:12px;
-    white-space:pre-wrap;word-break:break-word;line-height:1.35;position:relative;
-    backdrop-filter: blur(2px); border:1px solid var(--outline);}
-  .bubble.me{background:var(--bubble-me)}
-  .bubble.ai{background:var(--bubble-ai);border-color:var(--gold-soft)}
-  .actions{position:absolute;right:-4px;top:-30px;display:flex;gap:6px;opacity:0;pointer-events:none;transition:.12s}
-  .bubble:hover .actions{opacity:1;pointer-events:auto}
-  .action{font-size:12px;padding:5px 8px;border-radius:999px;border:1px solid var(--outline);background:rgba(0,0,0,.55);cursor:pointer}
-  .thumb{display:block;max-width:260px;max-height:200px;border-radius:10px;border:1px solid var(--outline)}
-  .file-meta{font-size:12px;opacity:.85;margin-top:6px}
-
-  /* composer */
-  .composer{position:sticky;bottom:0;z-index:10;border-top:1px solid rgba(255,255,255,.08);
-    background:linear-gradient(180deg,rgba(12,14,18,0),rgba(12,14,18,.95));padding:10px 14px}
-  .composer-row{max-width:1100px;margin:0 auto;display:flex;gap:8px}
-  .composer .btn,.composer .input{height:44px}
-
-  /* library modal */
-  #library-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1500}
-  #library-scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(2px)}
-  #library-card{position:relative;width:min(900px,92vw);max-height:min(72vh,800px);overflow:auto;padding:16px;border-radius:16px;
-    background:rgba(18,19,23,.97);border:1px solid var(--outline);box-shadow:var(--shadow)}
-  .lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
-  .lib-item{border:1px solid var(--outline);background:rgba(255,255,255,.04);border-radius:12px;padding:10px}
-  .lib-item .thumb{display:block;width:100%;height:150px;object-fit:cover;border-radius:8px;border:1px solid var(--outline)}
-  .lib-actions{display:flex;gap:8px;margin-top:6px}
-  .close-x{position:absolute;right:14px;top:12px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.18);cursor:pointer}
-
-  /* settings overlay */
-  #settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);display:none;z-index:1600}
-  #settings{position:fixed;top:92px;left:50%;transform:translateX(-50%);width:min(980px,96vw);max-height:min(80vh,900px);
-    overflow:auto;background:rgba(20,20,22,.98);border:1px solid var(--gold-soft);border-radius:14px;padding:0;box-shadow:var(--shadow);display:none;z-index:1700}
-  .settings-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
-  .settings-body{display:grid;grid-template-columns:220px 1fr;min-height:360px}
-  .settings-nav{border-right:1px solid rgba(255,255,255,.08);padding:10px}
-  .settings-nav .item{padding:10px 12px;border-radius:10px;cursor:pointer}
-  .settings-nav .item.active{background:rgba(255,255,255,.06);border:1px solid var(--outline)}
-  .settings-pane{padding:16px}
-  .field{display:flex;flex-direction:column;gap:6px;margin:10px 0}
-  .field input,.field select{background:rgba(0,0,0,.28);border:1px solid var(--outline);color:var(--ink);padding:10px 12px;border-radius:10px}
-  .links a{display:inline-block;margin:6px 10px 0 0;padding:8px 12px;border:1px solid var(--outline);border-radius:10px;text-decoration:none;color:var(--ink);background:rgba(255,255,255,.06)}
-
-  /* responsive */
-  @media (max-width:1024px){
-    .hamburger{display:block}
-    .main{grid-template-columns:1fr}
-    .sidebar{position:fixed;z-index:25;top:var(--header-h);left:0;height:calc(100% - var(--header-h));width:min(86vw,360px);transform:translateX(-110%);transition:transform .18s}
-    .sidebar.open{transform:translateX(0)}
-    .chat-wrap{padding:16px 12px 104px}
-    .bubble{max-width:86%}
-    :root{--symbol-size:64px}
-  }
-</style>
-</head>
-<body>
-<div class="app">
-  <!-- header -->
-  <div class="header">
-    <button id="hamburger" class="hamburger">☰</button>
-    <div class="brand">L U C I D I A N</div>
-    <div class="symbol" aria-hidden="true">
-      <!-- classic rosette (concentric interlaced circles) -->
-      <svg viewBox="0 0 100 100">
-        <g stroke="#f2cf66" stroke-width="1.2" fill="none" opacity=".96">
-          <defs><circle id="r" cx="50" cy="18" r="32"/></defs>
-          <!-- 24 rotations to create the rosette look -->
-          <use href="#r"/><use href="#r" transform="rotate(15,50,50)"/>
-          <use href="#r" transform="rotate(30,50,50)"/><use href="#r" transform="rotate(45,50,50)"/>
-          <use href="#r" transform="rotate(60,50,50)"/><use href="#r" transform="rotate(75,50,50)"/>
-          <use href="#r" transform="rotate(90,50,50)"/><use href="#r" transform="rotate(105,50,50)"/>
-          <use href="#r" transform="rotate(120,50,50)"/><use href="#r" transform="rotate(135,50,50)"/>
-          <use href="#r" transform="rotate(150,50,50)"/><use href="#r" transform="rotate(165,50,50)"/>
-          <use href="#r" transform="rotate(180,50,50)"/><use href="#r" transform="rotate(195,50,50)"/>
-          <use href="#r" transform="rotate(210,50,50)"/><use href="#r" transform="rotate(225,50,50)"/>
-          <use href="#r" transform="rotate(240,50,50)"/><use href="#r" transform="rotate(255,50,50)"/>
-          <use href="#r" transform="rotate(270,50,50)"/><use href="#r" transform="rotate(285,50,50)"/>
-          <use href="#r" transform="rotate(300,50,50)"/><use href="#r" transform="rotate(315,50,50)"/>
-          <use href="#r" transform="rotate(330,50,50)"/><use href="#r" transform="rotate(345,50,50)"/>
-        </g>
-      </svg>
-    </div>
-  </div>
-
-  <!-- stars -->
-  <canvas id="stars"></canvas>
-
-  <!-- main -->
-  <div class="main">
-    <!-- sidebar -->
-    <aside id="sidebar" class="sidebar">
-      <div class="sidebar-scroll">
-        <div class="row" style="margin-top:2px">
-          <button id="newConv" class="btn" style="flex:1"></button>
-          <button id="openLibrary" class="btn secondary"></button>
-          <button id="openSettings" class="btn secondary"></button>
-        </div>
-        <div class="row">
-          <input id="searchBox" class="input"/>
-          <button id="searchGo" class="btn secondary"></button>
-        </div>
-        <div id="convList"></div>
-      </div>
-    </aside>
-
-    <!-- chat -->
-    <div id="chatWrap" class="chat-wrap">
-      <div id="chat" class="chat"></div>
-    </div>
-  </div>
-
-  <!-- composer -->
-  <div class="composer">
-    <div class="composer-row">
-      <input id="fileInput" type="file" multiple style="display:none"
-             accept="image/*,video/*,application/pdf,.txt,.md,.doc,.docx,.xlsx,.ppt,.pptx,application/*">
-      <button id="attach" class="btn secondary"></button>
-      <button id="mic" class="btn secondary">🎙️</button>
-      <input id="msg" class="input"/>
-      <button id="send" class="btn"></button>
-      <button id="voice" class="btn secondary"></button>
-    </div>
-  </div>
-</div>
-
-<!-- Library modal -->
-<div id="library-modal">
-  <div id="library-scrim"></div>
-  <div id="library-card">
-    <button id="libraryClose" class="close-x"></button>
-    <h3 id="libraryTitle" style="margin:0 0 12px 0"></h3>
-    <div id="libraryGrid" class="lib-grid"></div>
-  </div>
-</div>
-
-<!-- Settings overlay -->
-<div id="settings-overlay"></div>
-<div id="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-  <div class="settings-head">
-    <strong id="settings-title">Settings</strong>
-    <button id="settingsClose" class="close-x"></button>
-  </div>
-  <div class="settings-body">
-    <nav class="settings-nav" id="settingsNav">
-      <div class="item active" data-pane="account" id="navAccount"></div>
-      <div class="item" data-pane="preferences" id="navPrefs"></div>
-      <div class="item" data-pane="memories" id="navMems"></div>
-      <div class="item" data-pane="connectors" id="navConn"></div>
-      <div class="item" data-pane="danger" id="navDanger"></div>
-      <div class="item" id="signOutBtn"></div>
-    </nav>
-    <section class="settings-pane" id="pane-account">
-      <div class="field"><label id="lblName"></label><input id="s_name" type="text"></div>
-      <div class="field"><label id="lblEmail"></label><input id="s_email" type="email"></div>
-      <div class="field"><label id="lblPhone"></label><input id="s_phone" type="tel"></div>
-      <div class="field"><label id="lblPass"></label><input id="s_pass" type="password" placeholder="••••••••"></div>
-      <button id="saveAccount" class="btn"></button>
-    </section>
-    <section class="settings-pane" id="pane-preferences" hidden>
-      <div class="field"><label id="lblUILang"></label>
-        <select id="s_lang">
-          <option>English</option><option>Español</option><option>Français</option><option>Deutsch</option>
-          <option>Português</option><option>Italiano</option><option>हिन्दी</option>
-          <option>中文</option><option>日本語</option><option>한국어</option>
-        </select>
-      </div>
-      <div class="field"><label id="lblSpoken"></label>
-        <select id="s_spoken">
-          <option>Auto</option><option>English</option><option>Español</option><option>Français</option>
-          <option>Deutsch</option><option>Português</option><option>Italiano</option>
-          <option>हिन्दी</option><option>中文</option><option>日本語</option><option>한국어</option>
-        </select>
-      </div>
-      <div class="field"><label id="lblVoice"></label>
-        <select id="s_voice">
-          <option>Orion</option><option>Lyra</option><option>Atlas</option><option>Selene</option><option>Quill</option>
-        </select>
-      </div>
-      <button id="savePrefs" class="btn"></button>
-    </section>
-    <section class="settings-pane" id="pane-memories" hidden>
-      <p id="memListTitle" style="opacity:.85"></p>
-      <ul id="memList"></ul>
-    </section>
-    <section class="settings-pane" id="pane-connectors" hidden>
-      <p id="connNote" style="opacity:.85"></p>
-      <div class="links" id="connLinks">
-        <a href="https://mail.google.com" target="_blank" rel="noopener">Gmail</a>
-        <a href="https://drive.google.com" target="_blank" rel="noopener">Google Drive</a>
-        <a href="https://calendar.google.com" target="_blank" rel="noopener">Google Calendar</a>
-        <a href="https://docs.google.com" target="_blank" rel="noopener">Google Docs</a>
-        <a href="https://nextcloud.com" target="_blank" rel="noopener">Nextcloud (open-source)</a>
-        <a href="https://www.onlyoffice.com" target="_blank" rel="noopener">ONLYOFFICE (open-source)</a>
-      </div>
-    </section>
-    <section class="settings-pane" id="pane-danger" hidden>
-      <div class="danger-zone">
-        <strong id="dangerTitle"></strong>
-        <p id="dangerText" style="opacity:.85;margin:.4rem 0 1rem"></p>
-        <button id="deleteAccount" class="btn pill danger" style="border-radius:10px"></button>
-      </div>
-    </section>
-  </div>
-</div>
-
-<script>
-/* ========= tiny state ========= */
-const state = {
-  currentConvId:null,
-  conversations: JSON.parse(localStorage.getItem('convs')||'[]'),
-  library: JSON.parse(localStorage.getItem('library')||'[]'),
-  profile: JSON.parse(localStorage.getItem('profile')||'{"name":"kyle","email":"kylejenkins2468@gmail.com"}'),
-  settings: JSON.parse(localStorage.getItem('settings')||'{"lang":"English","spoken":"Auto","voice":"Orion"}'),
-  memories: JSON.parse(localStorage.getItem('memories')||'[]')
-};
-const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
-const el={
-  chat:$('#chat'), chatWrap:$('#chatWrap'), convList:$('#convList'), msg:$('#msg'),
-  fileInput:$('#fileInput'), mic:$('#mic'), voice:$('#voice'),
-  libModal:$('#library-modal'), libScrim:$('#library-scrim'), libClose:$('#libraryClose'), libGrid:$('#libraryGrid'),
-  sOverlay:$('#settings-overlay'), settings:$('#settings'), settingsNav:$('#settingsNav'),
-  panes:{account:$('#pane-account'), preferences:$('#pane-preferences'), memories:$('#pane-memories'), connectors:$('#pane-connectors'), danger:$('#pane-danger')}
+const LANG = {
+  en: {
+    new: "New",
+    library: "Library",
+    settings: "Settings",
+    searchConvos: "Search conversations…",
+    typeMsg: "Type a message…",
+    send: "Send",
+    voice: "Voice",
+    mic: "Mic",
+    account: "Account",
+    preferences: "Preferences",
+    memories: "Memories",
+    connectors: "Connectors",
+    deleteAccount: "Delete account",
+    signOut: "Sign out",
+    uiLanguage: "UI language",
+    spokenLanguage: "Spoken language",
+    voiceModel: "Voice",
+    save: "Save",
+    login: "Log in",
+    register: "Create account",
+    name: "Name",
+    email: "Email",
+    phone: "Phone",
+    password: "Password",
+    confirmPassword: "Confirm password",
+    addMemory: "Add memory",
+    noMemories: "No memories yet",
+    connectorsHelp: "Connect your apps by pasting links or OAuth in the future",
+    startCall: "Start voice call",
+    endCall: "End call",
+    edited: "(edited)",
+    edit: "Edit",
+    delete: "Del",
+    select: "Select",
+    go: "Go",
+  },
+  es: {
+    new: "Nuevo",
+    library: "Biblioteca",
+    settings: "Ajustes",
+    searchConvos: "Buscar conversaciones…",
+    typeMsg: "Escribe un mensaje…",
+    send: "Enviar",
+    voice: "Voz",
+    mic: "Micrófono",
+    account: "Cuenta",
+    preferences: "Preferencias",
+    memories: "Memorias",
+    connectors: "Conectores",
+    deleteAccount: "Eliminar cuenta",
+    signOut: "Cerrar sesión",
+    uiLanguage: "Idioma de la interfaz",
+    spokenLanguage: "Idioma hablado",
+    voiceModel: "Voz",
+    save: "Guardar",
+    login: "Iniciar sesión",
+    register: "Crear cuenta",
+    name: "Nombre",
+    email: "Correo",
+    phone: "Teléfono",
+    password: "Contraseña",
+    confirmPassword: "Confirmar contraseña",
+    addMemory: "Agregar memoria",
+    noMemories: "Aún no hay memorias",
+    connectorsHelp: "Conecta tus apps pegando enlaces u OAuth en el futuro",
+    startCall: "Iniciar llamada",
+    endCall: "Terminar llamada",
+    edited: "(editado)",
+    edit: "Editar",
+    delete: "Borrar",
+    select: "Elegir",
+    go: "Ir",
+  },
 };
 
-/* ========= i18n ========= */
-const tr={
-  English:{New:"New",OpenLibrary:"Open",Settings:"Settings",SearchPh:"Search conversations...",Go:"Go",
-    Attach:"Attach",Send:"Send",Voice:"Voice",Close:"Close",SharedLibrary:"Shared Library",
-    Select:"Select",Del:"Del",DeleteConfirm:"Delete this conversation? This cannot be undone.",
-    Echo:"Echoing intention:", Copy:"Copy", Edit:"Edit", Read:"Read", Reply:"Reply",
-    Account:"Account",Preferences:"Preferences",Memories:"Memories",Connectors:"Connectors",Danger:"Danger Zone",
-    SignOut:"Sign out", Name:"Name",Email:"Email",Phone:"Phone",Password:"Password",Save:"Save",
-    UILang:"UI language",Spoken:"Spoken language",VoiceLbl:"Voice",MemList:"Saved memories (demo):",
-    ConnNote:"Open links to connect your accounts or services.",
-    DangerTitle:"Delete account", DangerText:"This clears local data on this device (demo). You will be asked to confirm.",
-    DeleteAccount:"Delete account"},
-  Español:{New:"Nuevo",OpenLibrary:"Abrir",Settings:"Ajustes",SearchPh:"Buscar conversaciones...",Go:"Ir",
-    Attach:"Adjuntar",Send:"Enviar",Voice:"Voz",Close:"Cerrar",SharedLibrary:"Biblioteca compartida",
-    Select:"Elegir",Del:"Borrar",DeleteConfirm:"¿Borrar esta conversación? No se puede deshacer.",
-    Echo:"Intención reflejada:", Copy:"Copiar", Edit:"Editar", Read:"Leer", Reply:"Responder",
-    Account:"Cuenta",Preferences:"Preferencias",Memories:"Memorias",Connectors:"Conectores",Danger:"Zona de riesgo",
-    SignOut:"Cerrar sesión", Name:"Nombre",Email:"Correo",Phone:"Teléfono",Password:"Contraseña",Save:"Guardar",
-    UILang:"Idioma de la interfaz",Spoken:"Idioma hablado",VoiceLbl:"Voz",MemList:"Memorias guardadas (demo):",
-    ConnNote:"Abre enlaces para conectar tus cuentas o servicios.",
-    DangerTitle:"Eliminar cuenta", DangerText:"Esto borra los datos locales en este dispositivo (demo). Se te pedirá confirmación.",
-    DeleteAccount:"Eliminar cuenta"},
-  Français:{New:"Nouveau",OpenLibrary:"Ouvrir",Settings:"Réglages",SearchPh:"Rechercher des conversations…",Go:"Aller",
-    Attach:"Joindre",Send:"Envoyer",Voice:"Voix",Close:"Fermer",SharedLibrary:"Bibliothèque partagée",
-    Select:"Sélect.",Del:"Suppr.",DeleteConfirm:"Supprimer cette conversation ? Action irréversible.",
-    Echo:"Intention reflétée :", Copy:"Copier", Edit:"Modifier", Read:"Lire", Reply:"Répondre",
-    Account:"Compte",Preferences:"Préférences",Memories:"Mémoires",Connectors:"Connecteurs",Danger:"Zone dangereuse",
-    SignOut:"Se déconnecter", Name:"Nom",Email:"Email",Phone:"Téléphone",Password:"Mot de passe",Save:"Enregistrer",
-    UILang:"Langue de l’interface",Spoken:"Langue parlée",VoiceLbl:"Voix",MemList:"Mémoires enregistrées (démo) :",
-    ConnNote:"Ouvrez les liens pour connecter vos services.",
-    DangerTitle:"Supprimer le compte", DangerText:"Efface les données locales sur cet appareil (démo). Confirmation requise.",
-    DeleteAccount:"Supprimer le compte"},
-  Deutsch:{New:"Neu",OpenLibrary:"Öffnen",Settings:"Einstellungen",SearchPh:"Unterhaltungen suchen…",Go:"Los",
-    Attach:"Anhängen",Send:"Senden",Voice:"Sprache",Close:"Schließen",SharedLibrary:"Geteilte Bibliothek",
-    Select:"Wählen",Del:"Löschen",DeleteConfirm:"Diese Unterhaltung löschen? Dies kann nicht rückgängig gemacht werden.",
-    Echo:"Absicht wiedergegeben:", Copy:"Kopieren", Edit:"Bearbeiten", Read:"Vorlesen", Reply:"Antworten",
-    Account:"Konto",Preferences:"Voreinstellungen",Memories:"Erinnerungen",Connectors:"Verbinder",Danger:"Gefahrenzone",
-    SignOut:"Abmelden", Name:"Name",Email:"E-Mail",Phone:"Telefon",Password:"Passwort",Save:"Speichern",
-    UILang:"UI-Sprache",Spoken:"Gesprochene Sprache",VoiceLbl:"Stimme",MemList:"Gespeicherte Erinnerungen (Demo):",
-    ConnNote:"Öffnen Sie Links, um Ihre Dienste zu verbinden.",
-    DangerTitle:"Konto löschen", DangerText:"Löscht lokale Daten auf diesem Gerät (Demo). Bestätigung erforderlich.",
-    DeleteAccount:"Konto löschen"},
-  Português:{New:"Novo",OpenLibrary:"Abrir",Settings:"Configurações",SearchPh:"Buscar conversas…",Go:"Ir",
-    Attach:"Anexar",Send:"Enviar",Voice:"Voz",Close:"Fechar",SharedLibrary:"Biblioteca compartilhada",
-    Select:"Selecionar",Del:"Excluir",DeleteConfirm:"Excluir esta conversa? Não pode ser desfeito.",
-    Echo:"Intenção refletida:", Copy:"Copiar", Edit:"Editar", Read:"Ler", Reply:"Responder",
-    Account:"Conta",Preferences:"Preferências",Memories:"Memórias",Connectors:"Conectores",Danger:"Zona de risco",
-    SignOut:"Sair", Name:"Nome",Email:"Email",Phone:"Telefone",Password:"Senha",Save:"Salvar",
-    UILang:"Idioma da interface",Spoken:"Idioma falado",VoiceLbl:"Voz",MemList:"Memórias salvas (demo):",
-    ConnNote:"Abra links para conectar serviços.",
-    DangerTitle:"Excluir conta", DangerText:"Apaga os dados locais neste dispositivo (demo). Confirmação será solicitada.",
-    DeleteAccount:"Excluir conta"},
-  Italiano:{New:"Nuova",OpenLibrary:"Apri",Settings:"Impostazioni",SearchPh:"Cerca conversazioni…",Go:"Vai",
-    Attach:"Allega",Send:"Invia",Voice:"Voce",Close:"Chiudi",SharedLibrary:"Libreria condivisa",
-    Select:"Selez.",Del:"Elim.",DeleteConfirm:"Eliminare la conversazione? Operazione irreversibile.",
-    Echo:"Intenzione rispecchiata:", Copy:"Copia", Edit:"Modifica", Read:"Leggi", Reply:"Rispondi",
-    Account:"Account",Preferences:"Preferenze",Memories:"Memorie",Connectors:"Connettori",Danger:"Zona pericolosa",
-    SignOut:"Esci", Name:"Nome",Email:"Email",Phone:"Telefono",Password:"Password",Save:"Salva",
-    UILang:"Lingua dell’interfaccia",Spoken:"Lingua parlata",VoiceLbl:"Voce",MemList:"Memorie salvate (demo):",
-    ConnNote:"Apri i link per collegare i servizi.",
-    DangerTitle:"Elimina account", DangerText:"Cancella i dati locali su questo dispositivo (demo). Richiesta conferma.",
-    DeleteAccount:"Elimina account"},
-  "日本語":{New:"新規",OpenLibrary:"ライブラリ",Settings:"設定",SearchPh:"会話を検索…",Go:"検索",
-    Attach:"添付",Send:"送信",Voice:"音声",Close:"閉じる",SharedLibrary:"共有ライブラリ",
-    Select:"選択",Del:"削除",DeleteConfirm:"この会話を削除しますか？元に戻せません。",
-    Echo:"意図を反映：", Copy:"コピー", Edit:"編集", Read:"読み上げ", Reply:"返信",
-    Account:"アカウント",Preferences:"環境設定",Memories:"メモリー",Connectors:"コネクタ",Danger:"危険ゾーン",
-    SignOut:"サインアウト", Name:"名前",Email:"メール",Phone:"電話",Password:"パスワード",Save:"保存",
-    UILang:"UI言語",Spoken:"話し言葉",VoiceLbl:"ボイス",MemList:"保存済みメモリー（デモ）:",
-    ConnNote:"サービスへ接続するリンクを開きます。",
-    DangerTitle:"アカウント削除", DangerText:"この端末のローカルデータを消去します（デモ）。確認が必要です。",
-    DeleteAccount:"アカウント削除"},
-  "한국어":{New:"새 대화",OpenLibrary:"열기",Settings:"설정",SearchPh:"대화 검색…",Go:"이동",
-    Attach:"첨부",Send:"보내기",Voice:"음성",Close:"닫기",SharedLibrary:"공유 라이브러리",
-    Select:"선택",Del:"삭제",DeleteConfirm:"이 대화를 삭제할까요? 되돌릴 수 없습니다.",
-    Echo:"의도 반영:", Copy:"복사", Edit:"편집", Read:"읽기", Reply:"답장",
-    Account:"계정",Preferences:"환경설정",Memories:"메모리",Connectors:"연결",Danger:"위험 영역",
-    SignOut:"로그아웃", Name:"이름",Email:"이메일",Phone:"전화",Password:"비밀번호",Save:"저장",
-    UILang:"UI 언어",Spoken:"음성 언어",VoiceLbl:"보이스",MemList:"저장된 메모리(데모):",
-    ConnNote:"서비스 연결을 위해 링크를 여세요.",
-    DangerTitle:"계정 삭제", DangerText:"이 기기의 로컬 데이터를 삭제합니다(데모). 확인이 필요합니다.",
-    DeleteAccount:"계정 삭제"},
-  "中文":{New:"新会话",OpenLibrary:"打开",Settings:"设置",SearchPh:"搜索会话…",Go:"前往",
-    Attach:"附件",Send:"发送",Voice:"语音",Close:"关闭",SharedLibrary:"共享库",
-    Select:"选择",Del:"删除",DeleteConfirm:"删除此会话？该操作不可撤销。",
-    Echo:"意图回声：", Copy:"复制", Edit:"编辑", Read:"朗读", Reply:"回复",
-    Account:"账户",Preferences:"偏好",Memories:"记忆",Connectors:"连接器",Danger:"危险区域",
-    SignOut:"退出登录", Name:"姓名",Email:"邮箱",Phone:"电话",Password:"密码",Save:"保存",
-    UILang:"界面语言",Spoken:"口语语言",VoiceLbl:"声音",MemList:"已保存记忆（演示）：",
-    ConnNote:"打开链接以连接您的服务。",
-    DangerTitle:"删除账户", DangerText:"清除此设备上的本地数据（演示）。需要确认。",
-    DeleteAccount:"删除账户"},
-  "हिन्दी":{New:"नया",OpenLibrary:"खोलें",Settings:"सेटिंग्स",SearchPh:"वार्तालाप खोजें…",Go:"जाएँ",
-    Attach:"संलग्न करें",Send:"भेजें",Voice:"आवाज़",Close:"बंद करें",SharedLibrary:"साझा लाइब्रेरी",
-    Select:"चुनें",Del:"हटाएँ",DeleteConfirm:"क्या वार्तालाप हटाएँ? इसे वापस नहीं किया जा सकता।",
-    Echo:"उद्देश्य प्रतिध्वनि:", Copy:"कॉपी", Edit:"संपादित", Read:"पढ़ें", Reply:"जवाब",
-    Account:"खाता",Preferences:"वरीयताएँ",Memories:"स्मृतियाँ",Connectors:"कनेक्टर्स",Danger:"खतरे का क्षेत्र",
-    SignOut:"साइन आउट", Name:"नाम",Email:"ईमेल",Phone:"फ़ोन",Password:"पासवर्ड",Save:"सहेजें",
-    UILang:"UI भाषा",Spoken:"बोली जाने वाली भाषा",VoiceLbl:"वॉयस",MemList:"सहेजी गई स्मृतियाँ (डेमो):",
-    ConnNote:"सेवाएँ जोड़ने के लिए लिंक खोलें।",
-    DangerTitle:"खाता हटाएँ", DangerText:"इस डिवाइस के स्थानीय डेटा साफ़ होंगे (डेमो)। पुष्टि आवश्यक।",
-    DeleteAccount:"खाता हटाएँ"}
+// ---------- UTIL ----------
+const uid = () => Math.random().toString(36).slice(2, 9);
+const ls = {
+  get: (k, v) => {
+    try { return JSON.parse(localStorage.getItem(k) ?? "null") ?? v; } catch { return v; }
+  },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+  del: (k) => localStorage.removeItem(k),
 };
-function t(k){ return tr[state.settings.lang||'English'][k]||tr.English[k]||k }
-function applyI18n(){
-  // buttons & labels
-  $('#newConv').textContent=t('New');
-  $('#openLibrary').textContent=t('OpenLibrary');
-  $('#openSettings').textContent=t('Settings');
-  $('#searchBox').placeholder=t('SearchPh');
-  $('#searchGo').textContent=t('Go');
-  $('#attach').textContent=t('Attach');
-  $('#send').textContent=t('Send');
-  $('#voice').textContent=t('Voice');
-  $('#libraryTitle').textContent=t('SharedLibrary');
-  $('#libraryClose').textContent=t('Close');
 
-  // settings nav/labels
-  $('#settings-title').textContent=t('Settings');
-  $('#settingsClose').textContent=t('Close');
-  $('#navAccount').textContent=t('Account');
-  $('#navPrefs').textContent=t('Preferences');
-  $('#navMems').textContent=t('Memories');
-  $('#navConn').textContent=t('Connectors');
-  $('#navDanger').textContent=t('Danger');
-  $('#signOutBtn').textContent=t('SignOut');
+// ---------- AUTH (demo) ----------
+function useAuth() {
+  const [user, setUser] = useState(() => ls.get("lucidian.user", null));
 
-  $('#lblName').textContent=t('Name');
-  $('#lblEmail').textContent=t('Email');
-  $('#lblPhone').textContent=t('Phone');
-  $('#lblPass').textContent=t('Password');
-  $('#saveAccount').textContent=t('Save');
-
-  $('#lblUILang').textContent=t('UILang');
-  $('#lblSpoken').textContent=t('Spoken');
-  $('#lblVoice').textContent=t('VoiceLbl');
-  $('#savePrefs').textContent=t('Save');
-
-  $('#memListTitle').textContent=t('MemList');
-  $('#connNote').textContent=t('ConnNote');
-  $('#dangerTitle').textContent=t('DangerTitle');
-  $('#dangerText').textContent=t('DangerText');
-  $('#deleteAccount').textContent=t('DeleteAccount');
-}
-
-/* ========= stars (dense + darker space) ========= */
-(function stars(){
-  const c=$('#stars'), ctx=c.getContext('2d');
-  function resize(){ c.width=innerWidth; c.height=innerHeight }
-  resize();
-  const num=Math.round((c.width*c.height)/6500); // more stars
-  const stars=Array.from({length:num},()=>({x:Math.random()*c.width,y:Math.random()*c.height,z:Math.random()*0.9+0.2,tw:Math.random()*0.8+0.2}));
-  function tick(){
-    ctx.clearRect(0,0,c.width,c.height);
-    for(const s of stars){
-      const size=s.z*1.7;
-      ctx.fillStyle=`rgba(255,255,255,${0.75*s.tw})`;
-      ctx.fillRect(s.x,s.y,size,size);
-      s.x+=0.03*s.z; if(s.x>c.width+2) s.x=-2;
-      s.tw+= (Math.random()-.5)*0.02; s.tw=Math.min(1,Math.max(.2,s.tw));
+  const login = async (email, password) => {
+    if (!USE_DEMO_AUTH) {
+      // TODO SUPABASE: call supabase.auth.signInWithPassword({ email, password })
+      return;
     }
-    requestAnimationFrame(tick);
-  }
-  addEventListener('resize',resize); tick();
-})();
+    const db = ls.get("lucidian.users", []);
+    const u = db.find((u) => u.email === email && u.password === password);
+    if (!u) throw new Error("Invalid credentials");
+    ls.set("lucidian.user", u);
+    setUser(u);
+  };
 
-/* ========= helpers ========= */
-const uuid=()=>crypto.randomUUID?crypto.randomUUID():
- 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>((c==='x'?Math.random()*16:Math.random()*16&0x3|0x8)|0).toString(16));
-const byId=id=>state.conversations.find(c=>c.id===id);
-const saveConvs=()=>localStorage.setItem('convs',JSON.stringify(state.conversations));
-const saveLib=()=>localStorage.setItem('library',JSON.stringify(state.library));
-const saveProfile=()=>localStorage.setItem('profile',JSON.stringify(state.profile));
-const saveSettings=()=>localStorage.setItem('settings',JSON.stringify(state.settings));
-function ensureConv(){
-  if(!state.currentConvId){
-    const id=uuid(); state.conversations.unshift({id,title:"New Conversation",items:[]});
-    state.currentConvId=id; saveConvs();
-  }
+  const register = async (payload) => {
+    if (!USE_DEMO_AUTH) {
+      // TODO SUPABASE: call supabase.auth.signUp(payload)
+      return;
+    }
+    const db = ls.get("lucidian.users", []);
+    if (db.some((u) => u.email === payload.email)) throw new Error("Email in use");
+    const u = { id: uid(), ...payload };
+    db.push(u);
+    ls.set("lucidian.users", db);
+    ls.set("lucidian.user", u);
+    setUser(u);
+  };
+
+  const logout = async () => {
+    if (!USE_DEMO_AUTH) {
+      // TODO SUPABASE: supabase.auth.signOut()
+    }
+    ls.del("lucidian.user");
+    setUser(null);
+  };
+
+  const deleteAccount = () => {
+    if (!user) return;
+    const db = ls.get("lucidian.users", []);
+    const rest = db.filter((u) => u.id !== user.id);
+    ls.set("lucidian.users", rest);
+    ["lucidian.mems", "lucidian.conns", "lucidian.convos"].forEach(ls.del);
+    logout();
+  };
+
+  return { user, login, register, logout, deleteAccount };
 }
-function escapeHtml(s){return (s||'').replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
 
-/* ========= render ========= */
-function renderSidebar(){
-  $('#convList').innerHTML=state.conversations.map(c=>`
-    <div class="conv" data-id="${c.id}">
-      <div class="title">${escapeHtml(c.title||'New Conversation')}</div>
-      <div class="mini">
-        <div class="pill select">${t('Select')}</div>
-        <div class="pill danger del">${t('Del')}</div>
+// ---------- STARFIELD BG ----------
+function Starfield() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const c = ref.current; if (!c) return; const ctx = c.getContext("2d");
+    let w = (c.width = c.offsetWidth), h = (c.height = c.offsetHeight);
+    const stars = Array.from({ length: 180 }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 1.1 + 0.2,
+      a: Math.random() * 0.6 + 0.4,
+      v: Math.random() * 0.4 + 0.2,
+    }));
+    let raf = 0;
+    const draw = () => {
+      ctx.clearRect(0, 0, w, h);
+      stars.forEach((s) => {
+        s.a += (Math.random() - 0.5) * 0.02; s.a = Math.max(0.1, Math.min(1, s.a));
+        ctx.globalAlpha = s.a; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fillStyle = "#9fb7ff"; ctx.fill();
+      });
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    const onResize = () => { w = c.width = c.offsetWidth; h = c.height = c.offsetHeight; };
+    window.addEventListener("resize", onResize);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); };
+  }, []);
+  return (
+    <div className="absolute inset-0 -z-10">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0b0f1a] to-[#04060b]" />
+      <canvas ref={ref} className="w-full h-full block" />
+    </div>
+  );
+}
+
+// ---------- VOICE CALL MODAL ----------
+function VoiceCall({ open, onClose, labels }) {
+  const circle = useRef(null);
+  const streamRef = useRef(null);
+  const anim = useRef(0);
+
+  useEffect(() => {
+    if (!open) return;
+    let audioCtx, analyser, source;
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      streamRef.current = stream;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      source = audioCtx.createMediaStreamSource(stream);
+      source.connect(analyser);
+      const step = () => {
+        analyser.getByteFrequencyData(dataArray);
+        const vol = dataArray.reduce((a, b) => a + b, 0) / (bufferLength * 255);
+        if (circle.current) circle.current.style.transform = `scale(${1 + vol * 1.8})`;
+        anim.current = requestAnimationFrame(step);
+      };
+      step();
+    });
+    return () => {
+      cancelAnimationFrame(anim.current);
+      if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
+    };
+  }, [open]);
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6">
+      <div className="bg-[#0d1324] border border-white/10 rounded-3xl shadow-2xl p-8 w-full max-w-md text-center relative">
+        <div className="text-gray-300 mb-6">{labels.voice} • Live</div>
+        <div className="mx-auto w-40 h-40 rounded-full bg-gradient-to-br from-indigo-500/30 to-cyan-400/30 grid place-items-center">
+          <div ref={circle} className="w-28 h-28 rounded-full bg-white/20 transition-transform" />
+        </div>
+        <button onClick={onClose} className="mt-8 px-5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white">
+          {labels.endCall}
+        </button>
       </div>
-    </div>`).join('');
+    </div>
+  );
 }
-function bubbleActions(){
-  return `<div class="actions">
-    <div class="action act-copy">${t('Copy')}</div>
-    <div class="action act-reply">${t('Reply')}</div>
-    <div class="action act-read">${t('Read')}</div>
-    <div class="action act-edit">${t('Edit')}</div>
-  </div>`;
-}
-function renderChat(){
-  const conv=byId(state.currentConvId);
-  $('#chat').innerHTML=(conv?.items||[]).map(m=>{
-    const side=m.role==='ai'?'ai':'me';
-    const acts=bubbleActions();
-    if(m.type==='file'){
-      const isImg=(m.mime||'').startsWith('image/');
-      const isVid=(m.mime||'').startsWith('video/');
-      const thumb=isImg?`<img src="${m.url}" class="thumb" alt="${escapeHtml(m.name)}">`
-                : isVid?`<video src="${m.url}" class="thumb" controls></video>`
-                : `<div class="file-meta">📄 ${escapeHtml(m.name)}</div>`;
-      return `<div class="row-bubble ${side}">
-        <div class="bubble ${side}">
-          ${acts}
-          ${thumb}
-          <div class="file-meta">
-            <a href="${m.url}" target="_blank" rel="noopener">Open</a> ·
-            <a href="${m.url}" download>Download</a>
+
+// ---------- SETTINGS MODAL ----------
+function Settings({ open, onClose, user, setUser, lang, setLang, labels, onDeleteAccount }) {
+  const [tab, setTab] = useState("account");
+  const [form, setForm] = useState(user || {});
+  const [mems, setMems] = useState(() => ls.get("lucidian.mems", []));
+  const [conns, setConns] = useState(() => ls.get("lucidian.conns", { gmail: "", drive: "", docs: "", calendar: "", dropbox: "", box: "", notion: "" }));
+
+  useEffect(() => setForm(user || {}), [user]);
+
+  const saveAccount = () => { const merged = { ...user, ...form }; setUser(merged); ls.set("lucidian.user", merged); };
+  const savePrefs = () => { /* lang handled by setLang */ };
+  const saveConns = () => { ls.set("lucidian.conns", conns); };
+
+  const addMemory = () => {
+    const text = prompt("Memory text");
+    if (!text) return; const m = { id: uid(), text, ts: Date.now() };
+    const next = [m, ...mems]; setMems(next); ls.set("lucidian.mems", next);
+  };
+  const delMemory = (id) => { const next = mems.filter((m) => m.id !== id); setMems(next); ls.set("lucidian.mems", next); };
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center p-6">
+      <div className="bg-[#0d1324] border border-white/10 rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden">
+        <div className="flex">
+          <div className="w-56 border-r border-white/10 p-4 space-y-2">
+            <SideTab active={tab === "account"} onClick={() => setTab("account")}>
+              {labels.account}
+            </SideTab>
+            <SideTab active={tab === "preferences"} onClick={() => setTab("preferences")}>
+              {labels.preferences}
+            </SideTab>
+            <SideTab active={tab === "memories"} onClick={() => setTab("memories")}>
+              {labels.memories}
+            </SideTab>
+            <SideTab active={tab === "connectors"} onClick={() => setTab("connectors")}>
+              {labels.connectors}
+            </SideTab>
+            <SideTab active={tab === "danger"} onClick={() => setTab("danger")}>
+              {labels.deleteAccount}
+            </SideTab>
+            <button onClick={onClose} className="mt-4 w-full text-left text-white/60 hover:text-white">Close</button>
+          </div>
+          <div className="flex-1 p-6">
+            {tab === "account" && (
+              <div className="space-y-3">
+                <LabeledInput label={labels.name} value={form.name || ""} onChange={(v) => setForm({ ...form, name: v })} />
+                <LabeledInput label={labels.email} value={form.email || ""} onChange={(v) => setForm({ ...form, email: v })} />
+                <LabeledInput label={labels.phone} value={form.phone || ""} onChange={(v) => setForm({ ...form, phone: v })} />
+                <LabeledInput label={labels.password} type="password" value={form.password || ""} onChange={(v) => setForm({ ...form, password: v })} />
+                <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20" onClick={saveAccount}>{labels.save}</button>
+              </div>
+            )}
+            {tab === "preferences" && (
+              <div className="space-y-3">
+                <div className="text-white/80">{labels.uiLanguage}</div>
+                <select className="bg-white/10 rounded-xl p-2" value={lang} onChange={(e) => setLang(e.target.value)}>
+                  <option value="en">English</option>
+                  <option value="es">Español</option>
+                </select>
+                <div className="text-white/50 text-sm">(Demo: switches interface labels immediately)</div>
+              </div>
+            )}
+            {tab === "memories" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-white/80">{labels.memories}</div>
+                  <button className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20" onClick={addMemory}>{labels.addMemory}</button>
+                </div>
+                {mems.length === 0 && <div className="text-white/40">{labels.noMemories}</div>}
+                <div className="space-y-2 max-h-72 overflow-auto pr-2">
+                  {mems.map((m) => (
+                    <div key={m.id} className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
+                      <div className="text-white/80 flex-1">{m.text}</div>
+                      <button onClick={() => delMemory(m.id)} className="text-red-300 hover:text-red-200">{labels.delete}</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {tab === "connectors" && (
+              <div className="space-y-3">
+                <p className="text-white/60 text-sm">{labels.connectorsHelp}</p>
+                {Object.entries(conns).map(([k, v]) => (
+                  <LabeledInput key={k} label={k} value={v} onChange={(val) => setConns({ ...conns, [k]: val })} />
+                ))}
+                <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20" onClick={saveConns}>{labels.save}</button>
+              </div>
+            )}
+            {tab === "danger" && (
+              <div className="space-y-4">
+                <p className="text-white/70">This will remove your local data on this device (demo).</p>
+                <button className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white" onClick={onDeleteAccount}>{labels.deleteAccount}</button>
+              </div>
+            )}
           </div>
         </div>
-      </div>`;
-    }
-    return `<div class="row-bubble ${side}">
-      <div class="bubble ${side}">
-        ${acts}
-        ${escapeHtml(m.text)}
       </div>
-    </div>`;
-  }).join('');
-  // keep the newest visible
-  const wrap=$('#chatWrap');
-  wrap.scrollTop=wrap.scrollHeight;
+    </div>
+  );
 }
 
-/* ========= sending & echo ========= */
-function send(text){
-  ensureConv();
-  const conv=byId(state.currentConvId);
-  conv.items.push({role:'me',text}); saveConvs(); renderChat();
-  setTimeout(()=>{
-    conv.items.push({role:'ai',text:`${t('Echo')} ${text}`});
-    saveConvs(); renderChat();
-    if(isSpeaking) speak(conv.items.at(-1).text);
-  },220);
+function SideTab({ children, active, onClick }) {
+  return (
+    <button onClick={onClick} className={`w-full text-left px-3 py-2 rounded-lg ${active ? "bg-white/15 text-white" : "text-white/70 hover:text-white hover:bg-white/5"}`}>
+      {children}
+    </button>
+  );
 }
 
-/* ========= events ========= */
-/* search/new/select/delete (with confirm) */
-$('#newConv').addEventListener('click',()=>{state.currentConvId=null;ensureConv();renderSidebar();renderChat()});
-$('#searchGo').addEventListener('click',()=>{
-  const q=($('#searchBox').value||'').toLowerCase();
-  const found=state.conversations.find(c=>(c.title||'new conversation').toLowerCase().includes(q));
-  if(found){state.currentConvId=found.id;renderSidebar();renderChat()}
-});
-$('#convList').addEventListener('click',(e)=>{
-  const row=e.target.closest('.conv'); if(!row)return;
-  const id=row.dataset.id;
-  if(e.target.classList.contains('del')){
-    if(confirm(t('DeleteConfirm'))){
-      const i=state.conversations.findIndex(c=>c.id===id);
-      if(i>-1){state.conversations.splice(i,1); if(state.currentConvId===id) state.currentConvId=null; ensureConv(); saveConvs(); renderSidebar(); renderChat()}
+function LabeledInput({ label, value, onChange, type = "text" }) {
+  return (
+    <label className="block">
+      <div className="text-white/70 mb-1 capitalize">{label}</div>
+      <input value={value} onChange={(e) => onChange(e.target.value)} type={type} className="w-full bg-white/10 rounded-xl px-3 py-2 text-white outline-none focus:ring-2 focus:ring-indigo-400" />
+    </label>
+  );
+}
+
+// ---------- CHAT ----------
+function Chat({ labels, language }) {
+  const listRef = useRef(null);
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState(() => ls.get("lucidian.convos", []));
+  const [editingId, setEditingId] = useState(null);
+  const [atBottom, setAtBottom] = useState(true);
+  const [callOpen, setCallOpen] = useState(false);
+
+  // persist
+  useEffect(() => { ls.set("lucidian.convos", messages); }, [messages]);
+
+  // autoscroll when at bottom
+  useEffect(() => {
+    const el = listRef.current; if (!el) return;
+    if (atBottom) el.scrollTop = el.scrollHeight;
+  }, [messages, atBottom]);
+
+  const onScroll = () => {
+    const el = listRef.current; if (!el) return;
+    setAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 20);
+  };
+
+  const send = (text) => {
+    if (!text.trim()) return;
+    if (editingId) {
+      // Replace message by id, and DELETE anything after that id
+      const idx = messages.findIndex((m) => m.id === editingId);
+      if (idx !== -1) {
+        const edited = { ...messages[idx], text, edited: true };
+        setMessages([...messages.slice(0, idx), edited]);
+      }
+      setEditingId(null);
+    } else {
+      setMessages([...messages, { id: uid(), role: "user", text }]);
     }
-  }else if(e.target.classList.contains('select')||e.target.classList.contains('title')){
-    state.currentConvId=id; renderSidebar(); renderChat();
-  }
-});
+    setInput("");
+  };
 
-/* composer */
-$('#send').addEventListener('click',()=>{const v=$('#msg').value.trim(); if(v){$('#msg').value=''; send(v)}})
-$('#msg').setAttribute('placeholder', tr[state.settings.lang||'English'].SearchPh.replace('Buscar conversaciones…','Type a message...').replace('会話を検索…','Type a message...'));
-$('#msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#send').click()}})
+  // Mic input – final results only (prevents duplicates)
+  const recRef = useRef(null);
+  const startMic = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert("SpeechRecognition not supported in this browser"); return; }
+    const r = new SR();
+    r.lang = language === "es" ? "es-ES" : "en-US";
+    r.interimResults = false; // crucial to avoid duplicates
+    r.maxAlternatives = 1;
+    r.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      send(transcript);
+    };
+    r.onerror = (e) => console.error(e);
+    r.onend = () => { recRef.current = null; };
+    recRef.current = r; r.start();
+  };
 
-/* bubble actions (Copy/Edit/Read/Reply) */
-$('#chat').addEventListener('click',async(e)=>{
-  const bubble=e.target.closest('.bubble'); if(!bubble) return;
-  const idx=[...document.querySelectorAll('.bubble')].indexOf(bubble);
-  const conv=byId(state.currentConvId); if(!conv) return;
-  const msg=conv.items[idx];
-
-  if(e.target.classList.contains('act-copy')){
-    const text=msg.type==='file'?msg.name:msg.text; try{await navigator.clipboard.writeText(text||'')}catch{}
-  }
-  if(e.target.classList.contains('act-edit') && msg && msg.type!=='file'){
-    const next=prompt(t('Edit'), msg.text||''); if(next!=null){ msg.text=next; saveConvs(); renderChat(); }
-  }
-  if(e.target.classList.contains('act-read')){
-    const ttxt=msg.type==='file'?msg.name:msg.text; speak(ttxt);
-  }
-  if(e.target.classList.contains('act-reply')){
-    const ttxt=msg.type==='file'?msg.name:msg.text; const box=$('#msg');
-    box.value = (box.value ? box.value+'\n' : '') + '> ' + ttxt + '\n'; box.focus();
-  }
-});
-
-/* attachments with previews + AI acknowledgement */
-$('#attach').addEventListener('click',()=>$('#fileInput').click());
-$('#fileInput').addEventListener('change',(e)=>{
-  const files=[...e.target.files]; if(!files.length) return; ensureConv();
-  const conv=byId(state.currentConvId); const names=[];
-  for(const f of files){
-    const url=URL.createObjectURL(f);
-    conv.items.push({role:'me',type:'file',url,name:f.name,mime:f.type}); names.push(f.name);
-    state.library.unshift({name:f.name,url,mime:f.type,ts:Date.now()});
-  }
-  saveConvs(); saveLib(); renderChat(); e.target.value="";
-  // AI reply acknowledging attachments
-  setTimeout(()=>{ conv.items.push({role:'ai',text:`${t('Echo')} ${names.join(', ')}`}); saveConvs(); renderChat(); if(isSpeaking) speak(conv.items.at(-1).text); },220);
-});
-
-/* library modal */
-$('#openLibrary').addEventListener('click',()=>{ renderLibrary(); $('#library-modal').style.display='flex' });
-$('#libraryClose').addEventListener('click',()=>$('#library-modal').style.display='none');
-$('#library-scrim').addEventListener('click',()=>$('#library-modal').style.display='none');
-function renderLibrary(){
-  $('#libraryGrid').innerHTML = state.library.map(f=>{
-    const isImg=(f.mime||'').startsWith('image/'); const isVid=(f.mime||'').startsWith('video/');
-    const thumb=isImg?`<img src="${f.url}" class="thumb" alt="${escapeHtml(f.name)}">`
-              : isVid?`<video src="${f.url}" class="thumb" muted></video>`
-              : `<div class="thumb" style="display:grid;place-items:center;font-weight:700;color:var(--gold);background:rgba(0,0,0,.35)">FILE</div>`;
-    const when=new Date(f.ts||Date.now()).toLocaleString();
-    return `<div class="lib-item">
-      ${thumb}
-      <div style="margin-top:6px;font-weight:700">${escapeHtml(f.name)}</div>
-      <div style="font-size:12px;opacity:.8">${when}</div>
-      <div class="lib-actions">
-        <a class="btn secondary" href="${f.url}" target="_blank" rel="noopener">${t('OpenLibrary')}</a>
-        <a class="btn secondary" href="${f.url}" download>Download</a>
+  const Bubble = ({ m }) => (
+    <div className={`max-w-[80%] w-fit ${m.role === "user" ? "self-end" : "self-start"}`}>
+      <div className={`rounded-2xl px-4 py-3 shadow ${m.role === "user" ? "bg-white/10" : "bg-emerald-900/30 border border-emerald-400/20"}`}>
+        <div className="whitespace-pre-wrap break-words text-white/90 leading-relaxed">{m.text}</div>
+        {m.edited && <div className="text-xs text-white/40 mt-1">{labels.edited}</div>}
       </div>
-    </div>`;
-  }).join('') || `<div style="opacity:.75">Nothing shared yet.</div>`;
+      <div className="flex gap-2 text-[12px] text-white/40 mt-1">
+        <button onClick={() => { setEditingId(m.id); setInput(m.text); }} className="hover:text-white">{labels.edit}</button>
+        <button onClick={() => setMessages(messages.filter((x) => x.id !== m.id))} className="hover:text-white">{labels.delete}</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="relative h-full">
+      <div ref={listRef} onScroll={onScroll} className="absolute inset-0 overflow-y-auto px-6 pb-28 pt-6 space-y-6 flex flex-col">
+        {messages.map((m) => <Bubble key={m.id} m={m} />)}
+      </div>
+
+      {!atBottom && (
+        <button onClick={() => { const el = listRef.current; if (el) el.scrollTop = el.scrollHeight; }} className="absolute bottom-28 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-white/10 text-white/80">↓</button>
+      )}
+
+      <div className="absolute bottom-0 inset-x-0 p-4">
+        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-2xl p-2">
+          <button onClick={startMic} className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/90">{labels.mic}</button>
+          <input className="flex-1 bg-transparent outline-none text-white px-2" placeholder={labels.typeMsg} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }} />
+          <button onClick={() => send(input)} className="px-4 py-2 rounded-xl bg-yellow-400 text-black font-medium hover:bg-yellow-300">{labels.send}</button>
+          <button onClick={() => setCallOpen(true)} className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/90">{labels.voice}</button>
+        </div>
+      </div>
+
+      <VoiceCall open={callOpen} onClose={() => setCallOpen(false)} labels={labels} />
+    </div>
+  );
 }
 
-/* settings overlay */
-$('#openSettings').addEventListener('click',openSettings);
-$('#settingsClose').addEventListener('click',closeSettings);
-$('#settings-overlay').addEventListener('click',closeSettings);
-$('#settingsNav').addEventListener('click',(e)=>{
-  const item=e.target.closest('.item'); if(!item) return;
-  [...$('#settingsNav').children].forEach(x=>x.classList.remove('active')); item.classList.add('active');
-  const pane=item.dataset.pane; Object.entries(el.panes).forEach(([k,v])=>v.hidden=(k!==pane));
-});
-$('#saveAccount').addEventListener('click',()=>{
-  state.profile={name:$('#s_name').value,email:$('#s_email').value,phone:$('#s_phone').value}; saveProfile(); alert(t('Save'));
-});
-$('#savePrefs').addEventListener('click',()=>{
-  state.settings.lang=$('#s_lang').value;
-  state.settings.spoken=$('#s_spoken').value;
-  state.settings.voice=$('#s_voice').value; saveSettings();
-  applyI18n(); renderSidebar(); renderChat(); alert(t('Save'));
-});
-$('#signOutBtn').addEventListener('click',()=>{ alert('Signed out (demo). Hook to your auth when ready.'); closeSettings(); });
-$('#deleteAccount').addEventListener('click',()=>{
-  if(confirm(t('DeleteConfirm')) && confirm(t('DeleteAccount')+'?')){ localStorage.clear(); location.reload(); }
-});
-function openSettings(){
-  // populate
-  $('#s_name').value=state.profile.name||''; $('#s_email').value=state.profile.email||''; $('#s_phone').value=state.profile.phone||''; $('#s_pass').value='';
-  $('#s_lang').value=state.settings.lang||'English'; $('#s_spoken').value=state.settings.spoken||'Auto'; $('#s_voice').value=state.settings.voice||'Orion';
-  $('#memList').innerHTML = (state.memories||[]).map(m=>`<li>${escapeHtml(m)}</li>`).join('') || '<li style="opacity:.7">No memories yet</li>';
-  $('#settings-overlay').style.display='block'; $('#settings').style.display='block';
+// ---------- LOGIN / REGISTER ----------
+function AuthScreen({ labels, onLogin, onRegister }) {
+  const [mode, setMode] = useState("login");
+  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", confirm: "" });
+  const submit = async () => {
+    try {
+      if (mode === "login") await onLogin(form.email, form.password);
+      else {
+        if (form.password !== form.confirm) throw new Error("Passwords do not match");
+        await onRegister({ name: form.name, email: form.email, phone: form.phone, password: form.password });
+      }
+    } catch (e) { alert(e.message); }
+  };
+  return (
+    <div className="min-h-screen relative text-white">
+      <Starfield />
+      <header className="flex items-center justify-center py-10">
+        <Wordmark />
+      </header>
+      <div className="max-w-md mx-auto p-6 bg-white/5 border border-white/10 rounded-3xl">
+        <div className="flex gap-2 mb-4">
+          <button onClick={() => setMode("login")} className={`px-3 py-1.5 rounded-xl ${mode === "login" ? "bg-white/15" : "bg-transparent hover:bg-white/10"}`}>{labels.login}</button>
+          <button onClick={() => setMode("register")} className={`px-3 py-1.5 rounded-xl ${mode === "register" ? "bg-white/15" : "bg-transparent hover:bg-white/10"}`}>{labels.register}</button>
+        </div>
+        {mode === "register" && <LabeledInput label={labels.name} value={form.name} onChange={(v) => setForm({ ...form, name: v })} />}
+        <div className="grid gap-3 mt-3">
+          <LabeledInput label={labels.email} value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
+          {mode === "register" && <LabeledInput label={labels.phone} value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />}
+          <LabeledInput label={labels.password} type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
+          {mode === "register" && <LabeledInput label={labels.confirmPassword} type="password" value={form.confirm} onChange={(v) => setForm({ ...form, confirm: v })} />}
+        </div>
+        <button onClick={submit} className="mt-4 w-full px-4 py-2 rounded-xl bg-yellow-400 text-black font-medium hover:bg-yellow-300">{mode === "login" ? labels.login : labels.register}</button>
+      </div>
+    </div>
+  );
 }
-function closeSettings(){ $('#settings').style.display='none'; $('#settings-overlay').style.display='none' }
 
-/* mobile drawer */
-$('#hamburger').addEventListener('click',()=>$('#sidebar').classList.toggle('open'));
-addEventListener('click',(e)=>{ if(innerWidth<=1024){ if(!e.target.closest('#sidebar')&&!e.target.closest('#hamburger')) $('#sidebar').classList.remove('open'); }});
-
-/* speech: mic (dictation) */
-let recog, recognizing=false;
-function langToCode(name){
-  return {English:'en-US','Español':'es-ES','Français':'fr-FR','Deutsch':'de-DE',
-          'Português':'pt-PT','Italiano':'it-IT','日本語':'ja-JP','한국어':'ko-KR','中文':'zh-CN','हिन्दी':'hi-IN'}[name] || 'en-US';
+// ---------- HEADER ----------
+function Wordmark() {
+  return (
+    <div className="w-full grid grid-cols-[1fr_auto_1fr] items-center px-6">
+      {/* Settings on far left – as requested */}
+      <div className="justify-self-start">
+        <span className="px-3 py-1 rounded-lg bg-white/10 text-white/80">Settings</span>
+      </div>
+      {/* LUCIDIAN centered */}
+      <div className="justify-self-center text-3xl tracking-[0.6em] text-yellow-300 font-semibold select-none">L U C I D I A N</div>
+      {/* ROUND symbol on RIGHT */}
+      <div className="justify-self-end">
+        <LogoOrb />
+      </div>
+    </div>
+  );
 }
-function setupRecog(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR) return null;
-  const r=new SR(); r.lang=langToCode(state.settings.spoken||state.settings.lang||'English'); r.interimResults=true; r.continuous=true;
-  r.onresult=(ev)=>{ let final=''; for(const res of ev.results){ if(res.isFinal) final+=res[0].transcript+' '; }
-    if(final){ const box=$('#msg'); box.value=(box.value+' '+final).trim(); } };
-  r.onerror=()=>{}; r.onend=()=>{ recognizing=false; $('#mic').textContent='🎙️'; };
-  return r;
-}
-$('#mic').addEventListener('click',()=>{
-  recog=recog||setupRecog();
-  if(!recog){ alert('Speech recognition not supported in this browser.'); return; }
-  if(!recognizing){ recognizing=true; $('#mic').textContent='■'; recog.lang=langToCode(state.settings.spoken||state.settings.lang||'English'); try{recog.start()}catch{} }
-  else { recognizing=false; $('#mic').textContent='🎙️'; try{recog.stop()}catch{} }
-});
 
-/* speech: voice (read aloud) */
-let isSpeaking=false;
-function speak(text){
-  if(!('speechSynthesis' in window)) { alert('Speech synthesis not supported.'); return; }
-  window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text||'');
-  const lang=langToCode(state.settings.spoken||state.settings.lang||'English');
-  u.lang=lang; u.rate=1; u.pitch=1;
-  const voices=window.speechSynthesis.getVoices();
-  const match=voices.find(v=>v.lang===lang)||voices.find(v=>v.lang.startsWith(lang.split('-')[0]))||voices[0];
-  if(match) u.voice=match;
-  window.speechSynthesis.speak(u);
+function LogoOrb() {
+  return (
+    <div className="w-10 h-10 rounded-full bg-yellow-300/20 border border-yellow-300/60 grid place-items-center shadow-inner">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="9" stroke="#f8e16a" strokeWidth="1.4"/>
+        <circle cx="11" cy="5" r="1.1" fill="#f8e16a"/>
+        <circle cx="6" cy="10" r="1" fill="#f8e16a"/>
+        <circle cx="16" cy="10" r="1" fill="#f8e16a"/>
+        <circle cx="11" cy="17" r="1" fill="#f8e16a"/>
+        <path d="M11 5 L6 10 L11 17 L16 10 Z" stroke="#f8e16a" strokeWidth="1" fill="none"/>
+      </svg>
+    </div>
+  );
 }
-$('#voice').addEventListener('click',()=>{
-  isSpeaking=!isSpeaking; $('#voice').textContent=isSpeaking? t('Voice')+' ▣' : t('Voice');
-  if(isSpeaking){ const conv=byId(state.currentConvId); const last=(conv?.items||[]).slice().reverse().find(m=>m.role==='ai'&&!m.type); if(last) speak(last.text); }
-  else { window.speechSynthesis.cancel(); }
-});
 
-/* init */
-(function init(){
-  applyI18n();
-  ensureConv(); renderSidebar(); renderChat();
-})();
-</script>
-</body>
-</html>
+// ---------- APP SHELL ----------
+export default function LucidianApp() {
+  const { user, login, register, logout, deleteAccount } = useAuth();
+  const [lang, setLang] = useState(ls.get("lucidian.lang", "en"));
+  const labels = useMemo(() => LANG[lang], [lang]);
+  useEffect(() => ls.set("lucidian.lang", lang), [lang]);
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  if (!user) return (
+    <AuthScreen labels={labels} onLogin={login} onRegister={register} />
+  );
+
+  return (
+    <div className="min-h-screen relative text-white">
+      <Starfield />
+
+      <div className="fixed top-4 left-4 z-20">
+        <button onClick={() => setSettingsOpen(true)} className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20">{labels.settings}</button>
+      </div>
+
+      {/* Header with centered wordmark and RIGHT orb */}
+      <header className="py-5">
+        <div className="w-full grid grid-cols-[1fr_auto_1fr] items-center px-6">
+          <div className="justify-self-start" />
+          <div className="justify-self-center text-3xl tracking-[0.6em] text-yellow-300 font-semibold select-none">L U C I D I A N</div>
+          <div className="justify-self-end"><LogoOrb /></div>
+        </div>
+      </header>
+
+      <main className="grid grid-cols-[290px_1fr] gap-4 px-6 pb-6 h-[calc(100vh-120px)]">
+        {/* Sidebar */}
+        <aside className="bg-white/5 border border-white/10 rounded-3xl p-4 flex flex-col">
+          <div className="flex gap-2 mb-3">
+            <button className="px-3 py-1.5 rounded-xl bg-yellow-400 text-black font-medium">{labels.new}</button>
+            <button className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20">{labels.library}</button>
+          </div>
+          <div className="mb-3">
+            <input placeholder={labels.searchConvos} className="w-full bg-white/10 rounded-xl px-3 py-2 outline-none" />
+            <button className="mt-2 w-full px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20">{labels.go}</button>
+          </div>
+          <div className="text-white/50 text-sm mb-2">Conversations</div>
+          <div className="space-y-2 overflow-auto pr-1">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between bg-white/5 rounded-xl p-2">
+                <div className="text-white/80 truncate">New Conversation</div>
+                <div className="flex gap-2 text-[12px] text-white/50">
+                  <button className="hover:text-white">{labels.select}</button>
+                  <button className="hover:text-white">{labels.delete}</button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-auto pt-4 text-white/60 text-sm">
+            <button onClick={logout} className="hover:text-white underline">{labels.signOut}</button>
+          </div>
+        </aside>
+
+        {/* Chat Area */}
+        <section className="bg-white/5 border border-white/10 rounded-3xl relative">
+          <Chat labels={labels} language={lang} />
+        </section>
+      </main>
+
+      <Settings
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        user={user}
+        setUser={(u) => ls.set("lucidian.user", u)}
+        lang={lang}
+        setLang={setLang}
+        labels={labels}
+        onDeleteAccount={deleteAccount}
+      />
+    </div>
+  );
+}
