@@ -6,404 +6,410 @@
 <title>Lucidian</title>
 <style>
   :root{
-    --brand-gold:#f2cf66;
-    --brand-gold-soft:rgba(242,207,102,.25);
-    --ink:#e6e8ee;
-    --bg1:#0b0f15;
-    --bg2:#0a1120;
-    --bubble-user:rgba(42,47,58,.92);
-    --bubble-ai:rgba(242,207,102,.10);
-    --header-h:78px;                 /* top bar height (a hair thinner than before) */
-    --sidebar-w:320px;
-    --radius:14px;
-    --symbol-size:84px;              /* tweak 70–110 to taste */
-    --shadow:0 12px 40px rgba(0,0,0,.55);
+    --brand-gold: #f2cf66;
+    --brand-gold-soft: rgba(242,207,102,.25);
+    --ink: #d9dde7;
+    --bg-deep: #0a1017;
+    --bubble-user: rgba(60,64,72,.88);
+    --bubble-ai: rgba(240,210,90,.12);
+    --header-h: 76px;           /* slightly thinner bar */
+    --sidebar-w: 320px;
+    --symbol-size: 74px;        /* adjust 64–90px if you want */
+    --rad: 14px;
+    --shadow: 0 10px 32px rgba(0,0,0,.55);
   }
 
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0}
-  body{
-    color:var(--ink);
-    font:16px/1.35 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-    background:
-      radial-gradient(1600px 1000px at 50% 38%, #133a58 0%, #0f2740 40%, var(--bg2) 100%);
-    overflow:hidden;
+  *{ box-sizing:border-box }
+  html,body{ height:100%; margin:0; color:var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+    background: radial-gradient(1100px 700px at 50% 40%, #123654 0%, #0d2234 44%, var(--bg-deep) 100%);
   }
+  body{ overflow:hidden }
 
-  /* layout */
-  .app{height:100%;display:grid;grid-template-rows:var(--header-h) 1fr auto}
+  .app{ height:100%; display:grid; grid-template-rows: var(--header-h) 1fr auto }
 
   /* header */
-  .header{
-    position:sticky;top:0;z-index:10;
-    background:linear-gradient(180deg, rgba(10,13,20,.96), rgba(10,13,20,.88));
-    border-bottom:1px solid rgba(255,255,255,.06);
-    display:grid;grid-template-columns:auto 1fr auto;align-items:center;
-    padding:0 16px
+  .header{ position:sticky; top:0; z-index:20;
+    display:grid; grid-template-columns:auto 1fr auto; align-items:center;
+    padding:0 14px; border-bottom:1px solid rgba(255,255,255,.07);
+    background: linear-gradient(180deg, rgba(15,18,23,.96), rgba(15,18,23,.86));
   }
-  .hamburger{display:none;position:relative;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--ink);padding:8px 10px;border-radius:10px;cursor:pointer}
-  .brand{display:flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:.48rem;color:var(--brand-gold);font-size:32px}
-  .profile-toggle{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--ink);padding:8px 10px;border-radius:10px;cursor:pointer}
-  .symbol{width:var(--symbol-size);height:var(--symbol-size);display:inline-block}
+  .hamburger{ display:none; position:relative; z-index:25;
+    padding:8px 10px; border-radius:10px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:var(--ink);
+    cursor:pointer;
+  }
+  .brand{ display:flex; justify-content:center; align-items:center; letter-spacing:.48rem;
+    color:var(--brand-gold); font-weight:800; font-size:32px; }
+  .symbol{ width:var(--symbol-size); height:var(--symbol-size); min-width:var(--symbol-size); min-height:var(--symbol-size);
+    display:grid; place-items:center; margin-left:10px; border-radius:50%;
+    box-shadow:0 0 18px rgba(242,207,102,.48), inset 0 0 18px rgba(242,207,102,.22);
+    background: radial-gradient(circle at 50% 50%, rgba(242,207,102,.85), rgba(242,207,102,.28) 44%, rgba(242,207,102,.05) 68%, transparent 70%);
+  }
+  .symbol svg{ width:86%; height:86%; display:block; }
 
   /* stars */
-  #stars{position:absolute;inset:0;z-index:0;pointer-events:none}
+  #stars{ position:absolute; inset:0; z-index:0; pointer-events:none }
 
-  /* main */
-  .main{position:relative;z-index:1;height:100%;display:grid;grid-template-columns:var(--sidebar-w) 1fr}
+  /* main row */
+  .main{ position:relative; z-index:1; height:100%;
+    display:grid; grid-template-columns: var(--sidebar-w) 1fr; }
 
   /* sidebar */
-  .sidebar{border-right:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg, rgba(15,18,23,.86), rgba(15,18,23,.66));padding:12px;overflow:hidden}
-  .sidebar-scroll{height:100%;overflow:auto;padding-right:4px}
-  .section{font-size:12px;opacity:.8;margin:10px 4px}
-  .row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-  .btn{background:linear-gradient(180deg, rgba(242,207,102,.96), rgba(242,207,102,.85));color:#2b2300;border:0;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.35)}
-  .btn.secondary{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid rgba(255,255,255,.12);font-weight:600}
-  .input{flex:1;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);color:var(--ink);padding:10px 12px;border-radius:12px}
+  .sidebar{ background: linear-gradient(180deg, rgba(15,18,23,.88), rgba(15,18,23,.66));
+    border-right:1px solid rgba(255,255,255,.07); padding:12px; overflow:hidden; }
+  .sidebar-scroll{ height:100%; overflow:auto; padding-right:4px }
+  .row{ display:flex; gap:8px; align-items:center; margin:10px 0 }
+  .btn{ background:linear-gradient(180deg, rgba(242,207,102,.95), rgba(242,207,102,.86));
+    border:0; color:#2b2300; font-weight:800; padding:10px 14px; border-radius:12px; cursor:pointer; }
+  .btn.secondary{ background:rgba(255,255,255,.06); color:var(--ink); border:1px solid rgba(255,255,255,.14); font-weight:600 }
+  .pill{ padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.1);
+    background:rgba(255,255,255,.06); cursor:pointer; user-select:none }
+  .pill.danger{ background:rgba(240,70,70,.18); border-color:rgba(240,70,70,.34); color:#ffdada }
 
-  .conv{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px;border-radius:10px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.06);margin-bottom:8px}
-  .conv .title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pill{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);cursor:pointer}
-  .pill.danger{background:rgba(240,70,70,.18);border-color:rgba(240,70,70,.35);color:#ffdada}
+  .input{ flex:1; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.14);
+    color:var(--ink); padding:10px 12px; border-radius:12px }
+
+  .conv{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:8px; border-radius:10px; background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.06); margin:8px 0 }
+  .conv .title{ flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis }
+  .mini{ display:flex; gap:6px }
 
   /* chat */
-  .chat-wrap{position:relative;height:100%;overflow:auto;padding:18px 18px 110px}
-  .chat{max-width:1100px;margin:0 auto}
-  .row-bubble{display:flex}
-  .row-bubble.me{justify-content:flex-end}
-  .row-bubble.ai{justify-content:flex-start}
+  .chat-wrap{ position:relative; overflow:auto; height:100%; padding:18px 18px 112px }
+  .chat{ max-width:1100px; margin:0 auto }
+  .row-bubble{ display:flex }
+  .row-bubble.me{ justify-content:flex-end }
+  .row-bubble.ai{ justify-content:flex-start }
   .bubble{
-    display:inline-block;max-width:74%;
-    margin:10px 12px;padding:12px 14px;border-radius:14px;
-    backdrop-filter:blur(3px);
-    word-wrap:break-word;overflow-wrap:anywhere;white-space:pre-wrap;
-    position:relative
+    display:inline-block; max-width:70%;
+    margin:10px 12px; padding:12px 14px; border-radius:14px; line-height:1.35;
+    white-space:pre-wrap; word-break:break-word;
+    backdrop-filter: blur(3px); border:1px solid rgba(255,255,255,.12); position:relative;
   }
-  .bubble.me{background:var(--bubble-user);border:1px solid rgba(255,255,255,.12)}
-  .bubble.ai{background:var(--bubble-ai);border:1px solid var(--brand-gold-soft)}
-  .bubble .meta{opacity:.8;font-size:12px;margin-top:6px}
+  .bubble.me{ background:var(--bubble-user) }
+  .bubble.ai{ background:var(--bubble-ai); border-color:var(--brand-gold-soft) }
 
-  /* hover actions */
-  .actions{position:absolute;right:-6px;top:-32px;display:flex;gap:6px;opacity:0;pointer-events:none;transition:.12s}
-  .bubble:hover .actions{opacity:1;pointer-events:auto}
-  .action{font-size:12px;padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.45);cursor:pointer}
+  .actions{ position:absolute; right:-6px; top:-32px; display:flex; gap:6px; opacity:0; pointer-events:none; transition:.12s }
+  .bubble:hover .actions{ opacity:1; pointer-events:auto }
+  .action{ font-size:12px; padding:6px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12);
+    background:rgba(0,0,0,.5); cursor:pointer }
 
-  /* file blocks */
-  .file-card{display:flex;gap:10px;align-items:center;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);padding:10px;border-radius:10px}
-  .thumb{width:54px;height:54px;border-radius:8px;background:#1e2530;display:flex;align-items:center;justify-content:center;overflow:hidden}
-  .thumb img{max-width:100%;max-height:100%;display:block}
-  .file-actions{display:flex;gap:8px;margin-top:6px}
+  .bubble .thumb{ display:block; max-width:260px; max-height:200px; border-radius:10px; border:1px solid rgba(255,255,255,.12) }
+  .bubble .file-meta{ font-size:12px; opacity:.85; margin-top:6px }
 
   /* composer */
-  .composer{position:sticky;bottom:0;z-index:10;background:linear-gradient(180deg, rgba(15,18,23,0), rgba(15,18,23,.92));border-top:1px solid rgba(255,255,255,.06);padding:10px 14px}
-  .composer-row{max-width:1100px;margin:0 auto;display:flex;gap:8px}
-  .composer .btn,.composer .input{height:44px}
-
-  /* overlays */
-  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);display:none;z-index:1600}
-  .panel{position:fixed;top:90px;left:50%;transform:translateX(-50%);width:min(920px,96vw);max-height:min(80vh,900px);overflow:auto;background:rgba(18,20,26,.96);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:none;z-index:1700}
-  .panel h3{margin:6px 0 12px}
-  .tabs{display:flex;gap:8px;margin-bottom:10px}
-  .tab{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer}
-  .tab.active{background:linear-gradient(180deg, rgba(242,207,102,.96), rgba(242,207,102,.85));color:#2b2300;border:0}
-  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-  .field{display:flex;flex-direction:column;gap:6px}
-  .field input,.field select{background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);color:var(--ink);padding:10px 12px;border-radius:10px}
-  .row-btns{display:flex;gap:10px;margin-top:8px}
+  .composer{ position:sticky; bottom:0; z-index:10; border-top:1px solid rgba(255,255,255,.07);
+    background: linear-gradient(180deg, rgba(15,18,23,0), rgba(15,18,23,.92)); padding:10px 14px }
+  .composer-row{ max-width:1100px; margin:0 auto; display:flex; gap:8px }
+  .composer .btn, .composer .input{ height:44px }
 
   /* library modal */
-  #library-modal{display:none;align-items:center;justify-content:center;position:fixed;inset:0;z-index:1500}
-  #lib-scrim{position:absolute;inset:0;background:rgba(0,0,0,.45)}
-  #lib-card{position:relative;width:min(1000px,94vw);max-height:min(76vh,900px);overflow:auto;background:rgba(18,19,23,.97);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
-  .close-x{position:absolute;right:14px;top:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:6px 10px;cursor:pointer}
-  .lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-  .lib-item{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:12px;padding:10px}
-  .lib-item .thumb{width:100%;height:140px;border-radius:10px}
+  #library-modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:1500 }
+  #library-scrim{ position:absolute; inset:0; background:rgba(0,0,0,.45); backdrop-filter: blur(2px) }
+  #library-card{ position:relative; width:min(900px,92vw); max-height:min(72vh,800px); overflow:auto; padding:16px;
+    border-radius:16px; background:rgba(18,19,23,.96); border:1px solid rgba(255,255,255,.12); box-shadow:var(--shadow) }
+  .lib-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:12px }
+  .lib-item{ border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); border-radius:12px; padding:10px }
+  .lib-item .thumb{ display:block; width:100%; height:150px; object-fit:cover; border-radius:8px; border:1px solid rgba(255,255,255,.12) }
+  .lib-actions{ display:flex; gap:8px; margin-top:6px }
+  .close-x{ position:absolute; right:14px; top:12px; padding:6px 10px; border-radius:10px;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); cursor:pointer }
+
+  /* settings overlay */
+  #settings-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.35); backdrop-filter: blur(2px); display:none; z-index:1600 }
+  #settings{ position:fixed; top:84px; left:50%; transform:translateX(-50%); width:min(920px,96vw);
+    max-height:min(78vh,900px); overflow:auto; background:rgba(20,20,22,.96);
+    border:1px solid var(--brand-gold-soft); border-radius:14px; padding:0; box-shadow:var(--shadow); display:none; z-index:1700 }
+  .settings-head{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.08) }
+  .settings-body{ display:grid; grid-template-columns: 220px 1fr; min-height:360px }
+  .settings-nav{ border-right:1px solid rgba(255,255,255,.08); padding:10px }
+  .settings-nav .item{ padding:10px 12px; border-radius:10px; cursor:pointer }
+  .settings-nav .item.active{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12) }
+  .settings-pane{ padding:16px }
+  .field{ display:flex; flex-direction:column; gap:6px; margin:10px 0 }
+  .field input, .field select{ background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.14); color:var(--ink);
+    padding:10px 12px; border-radius:10px }
+  .danger-zone{ margin-top:14px; padding:12px; border:1px solid rgba(240,70,70,.35); background:rgba(240,70,70,.1); border-radius:12px }
 
   /* responsive */
-  @media(max-width:1024px){
-    .hamburger{display:inline-block}
-    .main{grid-template-columns:1fr}
-    .sidebar{position:fixed;top:var(--header-h);left:0;height:calc(100% - var(--header-h));width:min(86vw,360px);transform:translateX(-110%);transition:transform .18s;z-index:1200}
-    .sidebar.open{transform:translateX(0)}
-    .bubble{max-width:88%}
-    .panel{top:86px;width:min(96vw,780px)}
-    .grid2{grid-template-columns:1fr}
+  @media (max-width:1024px){
+    .hamburger{ display:block }
+    .main{ grid-template-columns: 1fr }
+    .sidebar{ position:fixed; z-index:25; top:var(--header-h); left:0; height:calc(100% - var(--header-h));
+      width:min(86vw,360px); transform:translateX(-110%); transition:transform .18s }
+    .sidebar.open{ transform:translateX(0) }
+    .chat-wrap{ padding:16px 12px 104px }
+    .bubble{ max-width:86% }
   }
 </style>
 </head>
 <body>
 <div class="app">
-  <!-- Header -->
+  <!-- header -->
   <div class="header">
     <button id="hamburger" class="hamburger">☰</button>
-    <button id="profileBtn" class="profile-toggle">kyle ▾</button>
     <div class="brand">L U C I D I A N</div>
-
-    <!-- Lucidian symbol (SVG) -->
-    <svg class="symbol" viewBox="0 0 200 200" aria-hidden="true">
-      <defs>
-        <radialGradient id="glow" cx="50%" cy="50%">
-          <stop offset="0%" stop-color="rgba(242,207,102,.95)"/>
-          <stop offset="60%" stop-color="rgba(242,207,102,.35)"/>
-          <stop offset="80%" stop-color="rgba(242,207,102,.1)"/>
-          <stop offset="100%" stop-color="rgba(242,207,102,0)"/>
-        </radialGradient>
-      </defs>
-      <circle cx="100" cy="100" r="96" fill="url(#glow)"/>
-      <g fill="none" stroke="#f2cf66" stroke-width="4" opacity=".95">
-        <!-- flower-of-life weave -->
-        <!-- 24 circles -->
-        <script type="application/ecmascript"><![CDATA[
-          const g=document.currentScript.parentNode;
-          for(let i=0;i<24;i++){
-            const ang=i*(Math.PI/12), cx=100+60*Math.cos(ang), cy=100+60*Math.sin(ang);
-            const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
-            c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',60);
-            g.appendChild(c);
-          }
-          document.currentScript.remove();
-        ]]></script>
-      </g>
-    </svg>
+    <div class="symbol" title="Lucidian">
+      <!-- golden rosette (retains the look you liked) -->
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <g stroke="#f2cf66" stroke-width="1.2" fill="none" opacity=".95">
+          <!-- 24 interlaced circles to emulate the lattice -->
+          <!-- generated paths: circles of radius 32 rotated around center -->
+          <defs><circle id="c" cx="50" cy="18" r="32"/></defs>
+          <g opacity=".95">
+            <!-- rotate 24 times -->
+            <use href="#c"/><use href="#c" transform="rotate(15,50,50)"/>
+            <use href="#c" transform="rotate(30,50,50)"/><use href="#c" transform="rotate(45,50,50)"/>
+            <use href="#c" transform="rotate(60,50,50)"/><use href="#c" transform="rotate(75,50,50)"/>
+            <use href="#c" transform="rotate(90,50,50)"/><use href="#c" transform="rotate(105,50,50)"/>
+            <use href="#c" transform="rotate(120,50,50)"/><use href="#c" transform="rotate(135,50,50)"/>
+            <use href="#c" transform="rotate(150,50,50)"/><use href="#c" transform="rotate(165,50,50)"/>
+            <use href="#c" transform="rotate(180,50,50)"/><use href="#c" transform="rotate(195,50,50)"/>
+            <use href="#c" transform="rotate(210,50,50)"/><use href="#c" transform="rotate(225,50,50)"/>
+            <use href="#c" transform="rotate(240,50,50)"/><use href="#c" transform="rotate(255,50,50)"/>
+            <use href="#c" transform="rotate(270,50,50)"/><use href="#c" transform="rotate(285,50,50)"/>
+            <use href="#c" transform="rotate(300,50,50)"/><use href="#c" transform="rotate(315,50,50)"/>
+            <use href="#c" transform="rotate(330,50,50)"/><use href="#c" transform="rotate(345,50,50)"/>
+          </g>
+        </g>
+      </svg>
+    </div>
   </div>
 
-  <!-- Stars -->
+  <!-- stars -->
   <canvas id="stars"></canvas>
 
-  <!-- Main -->
+  <!-- main -->
   <div class="main">
-    <!-- Sidebar -->
+    <!-- sidebar -->
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-scroll">
-        <div class="section">Library</div>
-        <div class="row">
+        <div class="row" style="margin-top:2px">
+          <button id="newConv" class="btn" style="flex:1">New</button>
           <button id="openLibrary" class="btn secondary">Open</button>
-          <button id="newConv" class="btn" style="margin-left:auto">New</button>
+          <button id="openSettings" class="btn secondary">Settings</button>
         </div>
-
-        <div class="section">Search</div>
         <div class="row">
           <input id="searchBox" class="input" placeholder="Search conversations...">
           <button id="searchGo" class="btn secondary">Go</button>
         </div>
-
         <div id="convList"></div>
       </div>
     </aside>
 
-    <!-- Chat -->
+    <!-- chat -->
     <div id="chatWrap" class="chat-wrap">
       <div id="chat" class="chat"></div>
     </div>
   </div>
 
-  <!-- Composer -->
+  <!-- composer -->
   <div class="composer">
     <div class="composer-row">
-      <input id="file" type="file" multiple hidden />
+      <input id="fileInput" type="file" multiple style="display:none"
+             accept="image/*,video/*,application/pdf,.txt,.md,.doc,.docx,.xlsx,.ppt,.pptx,application/*">
       <button id="attach" class="btn secondary">Attach</button>
       <button id="mic" class="btn secondary">🎙️ Mic</button>
-      <input id="msg" class="input" placeholder="Type a message..." />
+      <input id="msg" class="input" placeholder="Type a message...">
       <button id="send" class="btn">Send</button>
       <button id="voice" class="btn secondary">Voice</button>
     </div>
   </div>
 </div>
 
-<!-- Settings / Profile -->
-<div id="scrim" class="scrim"></div>
-<div id="settings" class="panel">
-  <h3>Settings</h3>
-  <div class="tabs">
-    <div class="tab active" data-tab="account">Account</div>
-    <div class="tab" data-tab="memories">Memories</div>
-    <div class="tab" data-tab="language">Language</div>
-    <div class="tab" data-tab="voice">Voice</div>
-    <div class="tab" data-tab="connect">Connectors</div>
-  </div>
-
-  <div id="tab-account" class="tabpane">
-    <div class="grid2">
-      <div class="field"><label>Name<input id="tName" type="text"></label></div>
-      <div class="field"><label>Email<input id="tEmail" type="email"></label></div>
-      <div class="field"><label>Phone<input id="tPhone" type="tel"></label></div>
-      <div class="field"><label>Password<input id="tPass" type="password" placeholder="••••••"></label></div>
-    </div>
-    <div class="row-btns">
-      <button id="saveAccount" class="btn">Save</button>
-      <button id="signOut" class="btn secondary">Sign out</button>
-      <button id="deleteAccount" class="btn secondary" style="margin-left:auto;background:rgba(240,70,70,.18);border:1px solid rgba(240,70,70,.35);color:#ffdada">Delete account</button>
-    </div>
-  </div>
-
-  <div id="tab-memories" class="tabpane" style="display:none">
-    <div class="row">
-      <input id="newMemory" class="input" placeholder="Add a memory (mock)" />
-      <button id="addMemory" class="btn">Add</button>
-    </div>
-    <div id="memList"></div>
-  </div>
-
-  <div id="tab-language" class="tabpane" style="display:none">
-    <div class="grid2">
-      <div class="field">
-        <label>Interface language
-          <select id="uiLang">
-            <option>English</option><option>Español</option><option>Français</option>
-            <option>Deutsch</option><option>Português</option><option>日本語</option>
-            <option>한국어</option><option>中文(简体)</option><option>中文(繁體)</option>
-          </select>
-        </label>
-      </div>
-      <div class="field">
-        <label>Spoken language
-          <select id="spokenLang">
-            <option>Auto-detect</option><option>English</option><option>Spanish</option>
-            <option>French</option><option>German</option><option>Portuguese</option>
-            <option>Japanese</option><option>Korean</option><option>Chinese</option>
-          </select>
-        </label>
-      </div>
-    </div>
-  </div>
-
-  <div id="tab-voice" class="tabpane" style="display:none">
-    <div class="grid2">
-      <div class="field">
-        <label>Voice
-          <select id="voiceSel">
-            <option>Cove</option><option>Breeze</option><option>Terra</option><option>Nova</option>
-          </select>
-        </label>
-      </div>
-      <div class="field">
-        <label>Rate (0.5–2.0)<input id="voiceRate" type="number" min="0.5" max="2" step="0.1" value="1.0"></label>
-      </div>
-    </div>
-  </div>
-
-  <div id="tab-connect" class="tabpane" style="display:none">
-    <div class="grid2">
-      <label class="field"><input id="c-gmail" type="checkbox"> Gmail</label>
-      <label class="field"><input id="c-drive" type="checkbox"> Google Drive</label>
-      <label class="field"><input id="c-calendar" type="checkbox"> Google Calendar</label>
-      <label class="field"><input id="c-dropbox" type="checkbox"> Dropbox</label>
-      <label class="field"><input id="c-notion" type="checkbox"> Notion</label>
-      <label class="field"><input id="c-github" type="checkbox"> GitHub</label>
-    </div>
+<!-- Library modal -->
+<div id="library-modal">
+  <div id="library-scrim"></div>
+  <div id="library-card">
+    <button id="libraryClose" class="close-x">Close</button>
+    <h3 style="margin:0 0 12px 0">Shared Library</h3>
+    <div id="libraryGrid" class="lib-grid"></div>
   </div>
 </div>
 
-<!-- Library modal -->
-<div id="library-modal">
-  <div id="lib-scrim"></div>
-  <div id="lib-card">
-    <button id="libClose" class="close-x">Close</button>
-    <h3 style="margin:0 0 12px">Shared Library</h3>
-    <div id="libGrid" class="lib-grid"></div>
+<!-- Settings overlay -->
+<div id="settings-overlay"></div>
+<div id="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+  <div class="settings-head">
+    <strong id="settings-title">Settings</strong>
+    <button id="settingsClose" class="close-x">Close</button>
+  </div>
+  <div class="settings-body">
+    <nav class="settings-nav" id="settingsNav">
+      <div class="item active" data-pane="account">Account</div>
+      <div class="item" data-pane="preferences">Preferences</div>
+      <div class="item" data-pane="memories">Memories</div>
+      <div class="item" data-pane="connectors">Connectors</div>
+      <div class="item" data-pane="danger">Danger Zone</div>
+      <div class="item" id="signOutBtn">Sign out</div>
+    </nav>
+    <section class="settings-pane" id="pane-account">
+      <div class="field"><label>Name <input id="s_name" type="text"></label></div>
+      <div class="field"><label>Email <input id="s_email" type="email"></label></div>
+      <div class="field"><label>Phone <input id="s_phone" type="tel"></label></div>
+      <div class="field"><label>Password <input id="s_pass" type="password" placeholder="••••••••"></label></div>
+      <button id="saveAccount" class="btn">Save</button>
+    </section>
+    <section class="settings-pane" id="pane-preferences" hidden>
+      <div class="field"><label>UI language
+        <select id="s_lang">
+          <option>English</option><option>Español</option><option>Français</option>
+          <option>Deutsch</option><option>Português</option><option>Italiano</option>
+          <option>हिन्दी</option><option>中文</option><option>日本語</option><option>한국어</option>
+        </select></label></div>
+      <div class="field"><label>Spoken language
+        <select id="s_spoken">
+          <option>Auto-detect</option><option>English</option><option>Spanish</option>
+          <option>French</option><option>German</option><option>Portuguese</option>
+          <option>Hindi</option><option>Chinese</option><option>Japanese</option><option>Korean</option>
+        </select></label></div>
+      <div class="field"><label>Voice
+        <select id="s_voice">
+          <option>Cove</option><option>Ember</option><option>Breeze</option>
+          <option>Sol</option><option>Terra</option>
+        </select></label></div>
+      <button id="savePrefs" class="btn">Save</button>
+    </section>
+    <section class="settings-pane" id="pane-memories" hidden>
+      <p style="opacity:.85">Saved memories (demo):</p>
+      <ul id="memList"></ul>
+    </section>
+    <section class="settings-pane" id="pane-connectors" hidden>
+      <p style="opacity:.85">Connect your apps (mock toggles for now):</p>
+      <div class="row"><label><input type="checkbox" id="c_gmail"> Gmail</label></div>
+      <div class="row"><label><input type="checkbox" id="c_drive"> Google Drive</label></div>
+      <div class="row"><label><input type="checkbox" id="c_docs"> Google Docs</label></div>
+      <div class="row"><label><input type="checkbox" id="c_calendar"> Google Calendar</label></div>
+      <div class="row"><label><input type="checkbox" id="c_dropbox"> Dropbox</label></div>
+      <div class="row"><label><input type="checkbox" id="c_box"> Box</label></div>
+      <div class="row"><label><input type="checkbox" id="c_notion"> Notion</label></div>
+      <button id="saveConnectors" class="btn">Save</button>
+    </section>
+    <section class="settings-pane" id="pane-danger" hidden>
+      <div class="danger-zone">
+        <strong>Delete account</strong>
+        <p style="opacity:.85; margin:.4rem 0 1rem">This will remove your local data on this device (demo). You’ll be asked to confirm.</p>
+        <button id="deleteAccount" class="btn pill danger" style="border-radius:10px">Delete account</button>
+      </div>
+    </section>
   </div>
 </div>
 
 <script>
-/* ---------- state ---------- */
-const $ = s => document.querySelector(s);
-const $$ = s => [...document.querySelectorAll(s)];
+/* state */
 const state = {
-  currentConvId:null,
-  conversations: JSON.parse(localStorage.getItem('convs')||'[]'),
-  library: JSON.parse(localStorage.getItem('library')||'[]'), // {name,url,type,ts,thumb?}
-  profile: JSON.parse(localStorage.getItem('profile')||'{"name":"kyle","email":"kylejenkins2468@gmail.com"}'),
-  settings: JSON.parse(localStorage.getItem('settings')||'{"uiLang":"English","spokenLang":"Auto-detect","voice":"Cove","rate":1}'),
-  memories: JSON.parse(localStorage.getItem('memories')||'[]')
+  currentConvId: null,
+  conversations: JSON.parse(localStorage.getItem('convs') || '[]'),
+  library: JSON.parse(localStorage.getItem('library') || '[]'),
+  profile: JSON.parse(localStorage.getItem('profile') || '{"name":"kyle","email":"kylejenkins2468@gmail.com"}'),
+  settings: JSON.parse(localStorage.getItem('settings') || '{"lang":"English","spoken":"Auto-detect","voice":"Cove","connectors":{}}')
 };
-function saveConvs(){ localStorage.setItem('convs', JSON.stringify(state.conversations)); }
-function saveLibrary(){ localStorage.setItem('library', JSON.stringify(state.library)); }
-function saveProfile(){ localStorage.setItem('profile', JSON.stringify(state.profile)); }
-function saveSettings(){ localStorage.setItem('settings', JSON.stringify(state.settings)); }
-function saveMemories(){ localStorage.setItem('memories', JSON.stringify(state.memories)); }
-function byId(id){ return state.conversations.find(c=>c.id===id); }
-function ensureConv(){
-  if(!state.currentConvId){
-    const id = crypto.randomUUID();
-    state.conversations.unshift({id,title:"New Conversation",items:[]});
-    state.currentConvId=id; saveConvs();
-  }
-}
 
-/* ---------- stars (denser) ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+const el = {
+  chat: $('#chat'), chatWrap: $('#chatWrap'),
+  convList: $('#convList'), msg: $('#msg'),
+  stars: $('#stars'), sidebar: $('#sidebar'),
+  fileInput: $('#fileInput'), mic: $('#mic'), voice: $('#voice'),
+
+  // library
+  libModal: $('#library-modal'), libScrim: $('#library-scrim'),
+  libClose: $('#libraryClose'), libGrid: $('#libraryGrid'),
+
+  // settings
+  sOverlay: $('#settings-overlay'), settings: $('#settings'),
+  settingsClose: $('#settingsClose'), settingsNav: $('#settingsNav'),
+  pane: {
+    account: $('#pane-account'), preferences: $('#pane-preferences'),
+    memories: $('#pane-memories'), connectors: $('#pane-connectors'),
+    danger: $('#pane-danger')
+  },
+  // account fields
+  s_name: $('#s_name'), s_email: $('#s_email'), s_phone: $('#s_phone'), s_pass: $('#s_pass'),
+  s_lang: $('#s_lang'), s_spoken: $('#s_spoken'), s_voice: $('#s_voice')
+};
+
+/* stars */
 (function stars(){
-  const c=$('#stars'),ctx=c.getContext('2d');
-  function size(){ c.width=innerWidth; c.height=innerHeight; }
-  size();
-  const stars=Array.from({length: Math.round((c.width*c.height)/9000)},()=>({ // denser
-    x:Math.random()*c.width,y:Math.random()*c.height,z:Math.random()*0.6+0.4,tw:Math.random()*0.6+0.4
-  }));
+  const c = el.stars, ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize();
+  // more stars
+  const n = Math.round((c.width*c.height)/8000);
+  const stars = Array.from({length:n}, ()=>({x:Math.random()*c.width, y:Math.random()*c.height, z:Math.random()*0.8+0.3, tw:Math.random()*0.8+0.2}));
   function tick(){
     ctx.clearRect(0,0,c.width,c.height);
     for(const s of stars){
-      const sz=s.z*1.6;
-      ctx.fillStyle=`rgba(255,255,255,${0.65*s.tw})`;
-      ctx.fillRect(s.x,s.y,sz,sz);
-      s.x+=0.025*s.z; if(s.x>c.width+2) s.x=-2;
-      s.tw+=(Math.random()-.5)*0.02; s.tw=Math.min(1,Math.max(0.15,s.tw));
+      const size = s.z*1.8;
+      ctx.fillStyle = `rgba(255,255,255,${0.7*s.tw})`;
+      ctx.fillRect(s.x,s.y,size,size);
+      s.x += 0.035*s.z; if(s.x>c.width+2) s.x = -2;
+      s.tw += (Math.random()-.5)*0.02; s.tw = Math.min(1,Math.max(.2,s.tw));
     }
     requestAnimationFrame(tick);
   }
-  addEventListener('resize',size); tick();
+  addEventListener('resize', resize);
+  tick();
 })();
 
-/* ---------- render ---------- */
-const el={
-  chat:$('#chat'), chatWrap:$('#chatWrap'),
-  convList:$('#convList'), msg:$('#msg'),
-  file:$('#file'),
-  libraryModal:$('#library-modal'), libGrid:$('#libGrid'),
-  scrim:$('#scrim'), settings:$('#settings')
-};
-
-function fileThumb(file){
-  if(file.type.startsWith('image/')) return URL.createObjectURL(file);
-  if(file.type.startsWith('video/')) return null; // generic
-  return null;
+/* helpers */
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() :
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c=>{
+    const r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8); return v.toString(16)
+  })
+);
+const byId = id => state.conversations.find(c=>c.id===id);
+const saveConvs = ()=> localStorage.setItem('convs', JSON.stringify(state.conversations));
+const saveLib = ()=> localStorage.setItem('library', JSON.stringify(state.library));
+const saveProfile = ()=> localStorage.setItem('profile', JSON.stringify(state.profile));
+const saveSettings = ()=> localStorage.setItem('settings', JSON.stringify(state.settings));
+function ensureConv(){
+  if(!state.currentConvId){
+    const id = uuid();
+    state.conversations.unshift({id, title:"New Conversation", items:[]});
+    state.currentConvId = id; saveConvs();
+  }
 }
-function iconFor(type){ if(type.startsWith('image/')) return "🖼️"; if(type.startsWith('video/')) return "🎬"; if(type==="application/pdf") return "📄 PDF"; return "📎"; }
+function escapeHtml(s){return (s||'').replace(/[&<>"']/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
 
+/* render */
 function renderSidebar(){
   el.convList.innerHTML = state.conversations.map(c=>`
     <div class="conv" data-id="${c.id}">
-      <div class="title">${c.title||'New Conversation'}</div>
-      <div style="display:flex;gap:6px">
+      <div class="title">${escapeHtml(c.title||'New Conversation')}</div>
+      <div class="mini">
         <div class="pill select">Select</div>
         <div class="pill danger del">Del</div>
       </div>
-    </div>`).join('') || `<div style="opacity:.7;padding:8px">No conversations yet.</div>`;
+    </div>`).join('');
 }
 function renderChat(){
-  const c=byId(state.currentConvId);
-  el.chat.innerHTML = (c?.items||[]).map(m=>{
+  const conv = byId(state.currentConvId);
+  el.chat.innerHTML = (conv?.items||[]).map(m=>{
     const side = m.role==='ai' ? 'ai' : 'me';
-    const actions = `
-      <div class="actions">
-        <div class="action copy">Copy</div>
-        ${side==='me' && m.type!=='file' ? '<div class="action edit">Edit</div>' : ''}
-        <div class="action read">Read</div>
-      </div>`;
+    const actions = `<div class="actions">
+      <div class="action copy">Copy</div>
+      ${side==='me' && m.type!=='file' ? '<div class="action edit">Edit</div>' : ''}
+      <div class="action read">Read</div>
+    </div>`;
     if(m.type==='file'){
-      const ico=iconFor(m.mime||'');
-      const thumb = m.thumb ? `<img src="${m.thumb}" alt="">` : `<span>${ico}</span>`;
+      const isImg = m.mime?.startsWith('image/');
+      const isVid = m.mime?.startsWith('video/');
+      const thumb = isImg ? `<img src="${m.url}" class="thumb" alt="${escapeHtml(m.name)}">`
+                  : isVid ? `<video src="${m.url}" class="thumb" controls></video>`
+                  : `<div class="file-meta">File: ${escapeHtml(m.name)}</div>`;
       return `<div class="row-bubble ${side}">
         <div class="bubble ${side}">
           ${actions}
-          <div class="file-card">
-            <div class="thumb">${thumb}</div>
-            <div style="flex:1">
-              <div><strong>${m.name}</strong></div>
-              <div class="file-actions">
-                <a href="${m.url}" target="_blank">Open</a>
-                <a href="${m.url}" download="${m.name}">Download</a>
-              </div>
-            </div>
+          ${thumb}
+          <div class="file-meta">${escapeHtml(m.name)}</div>
+          <div class="file-meta">
+            <a href="${m.url}" target="_blank" rel="noopener">Open</a> ·
+            <a href="${m.url}" download>Download</a>
           </div>
         </div>
       </div>`;
@@ -411,7 +417,7 @@ function renderChat(){
     return `<div class="row-bubble ${side}">
       <div class="bubble ${side}">
         ${actions}
-        ${escapeHtml(m.text||'')}
+        ${escapeHtml(m.text)}
       </div>
     </div>`;
   }).join('');
@@ -419,170 +425,209 @@ function renderChat(){
 }
 function renderLibrary(){
   el.libGrid.innerHTML = state.library.map(f=>{
-    const date=new Date(f.ts||Date.now()).toLocaleString();
-    const thumb = f.thumb ? `<img src="${f.thumb}" alt="">` : `<div style="font-size:32px">${iconFor(f.type||'')}</div>`;
+    const isImg = f.mime?.startsWith('image/');
+    const isVid = f.mime?.startsWith('video/');
+    const thumb = isImg ? `<img src="${f.url}" class="thumb" alt="${escapeHtml(f.name)}">`
+                : isVid ? `<video src="${f.url}" class="thumb" muted></video>`
+                : `<div class="thumb" style="display:grid;place-items:center;font-weight:700;color:#f2cf66;background:rgba(0,0,0,.35)">FILE</div>`;
+    const when = new Date(f.ts||Date.now()).toLocaleString();
     return `<div class="lib-item">
-      <div class="thumb">${thumb}</div>
-      <div style="margin:8px 0 4px"><strong>${escapeHtml(f.name)}</strong></div>
-      <div style="opacity:.75;font-size:12px">${date}</div>
-      <div class="file-actions">
-        <a href="${f.url}" target="_blank">Open</a>
-        <a href="${f.url}" download="${f.name}">Download</a>
+      ${thumb}
+      <div style="margin-top:6px;font-weight:700">${escapeHtml(f.name)}</div>
+      <div style="font-size:12px;opacity:.8">${when}</div>
+      <div class="lib-actions">
+        <a class="btn secondary" href="${f.url}" target="_blank" rel="noopener">Open</a>
+        <a class="btn secondary" href="${f.url}" download>Download</a>
       </div>
     </div>`;
-  }).join('') || `<div style="opacity:.7">Nothing shared yet.</div>`;
+  }).join('') || `<div style="opacity:.75">Nothing shared yet.</div>`;
 }
 
-/* ---------- helpers ---------- */
-function escapeHtml(s){return (s||'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-function speak(text){ if(!('speechSynthesis' in window)) return; const u=new SpeechSynthesisUtterance(text||''); u.lang=langToBCP47(state.settings.spokenLang); u.rate=Number(state.settings.rate)||1; speechSynthesis.cancel(); speechSynthesis.speak(u); }
-function langToBCP47(name){ const map={English:"en-US",Spanish:"es-ES",French:"fr-FR",German:"de-DE",Portuguese:"pt-PT",Japanese:"ja-JP",Korean:"ko-KR",Chinese:"zh-CN"}; return map[name]||"en-US"; }
-
-/* ---------- actions ---------- */
+/* chat send + demo echo */
 function send(text){
   ensureConv();
-  const c=byId(state.currentConvId);
-  c.items.push({role:'me',text});
+  const conv = byId(state.currentConvId);
+  conv.items.push({role:'me', text});
   saveConvs(); renderChat();
-  // demo echo
-  setTimeout(()=>{ c.items.push({role:'ai',text:`Echoing intention: ${text}`}); saveConvs(); renderChat(); }, 180);
-}
-function addFiles(fileList){
-  ensureConv();
-  const c=byId(state.currentConvId);
-  [...fileList].forEach(f=>{
-    const url=URL.createObjectURL(f);
-    const entry={role:'me',type:'file',url,name:f.name,mime:f.type,thumb:fileThumb(f)};
-    c.items.push(entry);
-    state.library.unshift({name:f.name,url,type:f.type,thumb:entry.thumb,ts:Date.now()});
-  });
-  saveConvs(); saveLibrary(); renderChat();
+  setTimeout(()=>{
+    conv.items.push({role:'ai', text:`Echoing intention: ${text}`});
+    saveConvs(); renderChat();
+    if(isSpeaking) speak(conv.items.at(-1).text);
+  }, 220);
 }
 
-/* ---------- wiring ---------- */
-$('#send').addEventListener('click',()=>{ const t=$('#msg').value.trim(); if(!t) return; $('#msg').value=''; send(t); });
-$('#msg').addEventListener('keydown',e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); $('#send').click(); } });
-
-$('#attach').addEventListener('click',()=>$('#file').click());
-$('#file').addEventListener('change', e=> addFiles(e.target.files));
-
-$('#voice').addEventListener('click',()=>{
-  const c=byId(state.currentConvId); if(!c) return;
-  const lastAI=[...c.items].reverse().find(x=>x.role==='ai' && x.type!=='file');
-  if(lastAI) speak(lastAI.text);
-});
-
-$('#newConv').addEventListener('click',()=>{
-  state.currentConvId=null; ensureConv(); renderSidebar(); renderChat();
-});
-$('#searchGo').addEventListener('click',()=>{
-  const q=($('#searchBox').value||'').toLowerCase();
-  const m=state.conversations.find(c=>(c.title||'new conversation').toLowerCase().includes(q));
-  if(m){ state.currentConvId=m.id; renderSidebar(); renderChat(); }
-});
-$('#convList').addEventListener('click',e=>{
-  const row=e.target.closest('.conv'); if(!row) return;
-  const id=row.dataset.id;
-  if(e.target.classList.contains('select')||e.target.classList.contains('title')){
-    state.currentConvId=id; renderSidebar(); renderChat();
-  }else if(e.target.classList.contains('del')){
-    if(confirm('Delete this conversation? This cannot be undone.')){
-      const i=state.conversations.findIndex(c=>c.id===id);
-      if(i>-1){ state.conversations.splice(i,1); saveConvs(); if(state.currentConvId===id) state.currentConvId=null; ensureConv(); renderSidebar(); renderChat(); }
-    }
+/* attachments */
+$('#attach').addEventListener('click', ()=> el.fileInput.click());
+el.fileInput.addEventListener('change', async (e)=>{
+  const files = [...e.target.files];
+  if(!files.length) return;
+  ensureConv(); const conv = byId(state.currentConvId);
+  for(const f of files){
+    const url = URL.createObjectURL(f);
+    conv.items.push({role:'me', type:'file', url, name:f.name, mime:f.type});
+    state.library.unshift({name:f.name, url, mime:f.type, ts:Date.now()});
   }
+  saveConvs(); saveLib(); renderChat();
+  e.target.value = ""; // reset
+});
+
+/* composer interactions */
+$('#send').addEventListener('click', ()=>{
+  const t = el.msg.value.trim(); if(!t) return;
+  el.msg.value = ""; send(t);
+});
+el.msg.addEventListener('keydown', e=>{
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); $('#send').click(); }
 });
 
 /* bubble actions */
-$('#chat').addEventListener('click',async e=>{
-  const bubble=e.target.closest('.bubble'); if(!bubble) return;
-  const isMe=bubble.parentElement.classList.contains('me');
-  const idx=[...$('#chat').querySelectorAll('.bubble')].indexOf(bubble);
-  const c=byId(state.currentConvId); if(!c) return;
-  const msg=c.items.filter(m=>m.type!=='system')[idx];
+el.chat.addEventListener('click', async (e)=>{
+  const bubble = e.target.closest('.bubble'); if(!bubble) return;
+  const allBubs = [...$$('.bubble')];
+  const idx = allBubs.indexOf(bubble);
+  const conv = byId(state.currentConvId); if(!conv) return;
+  const msg = conv.items[idx];
 
   if(e.target.classList.contains('copy')){
-    const t=msg.type==='file'?msg.name:msg.text; await navigator.clipboard.writeText(t||'');
+    const text = msg.type==='file' ? msg.name : msg.text;
+    try{ await navigator.clipboard.writeText(text||''); }catch{}
   }
-  if(e.target.classList.contains('edit') && isMe && msg && msg.type!=='file'){
-    const nt=prompt('Edit your message:', msg.text||''); if(nt!=null){ msg.text=nt; saveConvs(); renderChat(); }
+  if(e.target.classList.contains('edit') && msg && msg.type!=='file'){
+    const next = prompt('Edit your message:', msg.text||'');
+    if(next!=null){ msg.text = next; saveConvs(); renderChat(); }
   }
   if(e.target.classList.contains('read')){
-    const t=msg.type==='file'?msg.name:msg.text; speak(t);
+    const t = msg.type==='file' ? msg.name : msg.text;
+    speak(t);
+  }
+});
+
+/* sidebar actions */
+$('#newConv').addEventListener('click', ()=>{
+  state.currentConvId = null; ensureConv(); renderSidebar(); renderChat();
+});
+$('#searchGo').addEventListener('click', ()=>{
+  const q = ($('#searchBox').value||'').toLowerCase();
+  const found = state.conversations.find(c=> (c.title||'new conversation').toLowerCase().includes(q));
+  if(found){ state.currentConvId = found.id; renderSidebar(); renderChat(); }
+});
+el.convList.addEventListener('click', (e)=>{
+  const row = e.target.closest('.conv'); if(!row) return;
+  const id = row.dataset.id;
+  if(e.target.classList.contains('del')){
+    if(confirm('Delete this conversation? This cannot be undone.')){
+      const i = state.conversations.findIndex(c=>c.id===id);
+      if(i>-1){ state.conversations.splice(i,1); if(state.currentConvId===id) state.currentConvId=null; ensureConv(); saveConvs(); renderSidebar(); renderChat(); }
+    }
+  }else if(e.target.classList.contains('select') || e.target.classList.contains('title')){
+    state.currentConvId = id; renderSidebar(); renderChat();
   }
 });
 
 /* library modal */
-$('#openLibrary').addEventListener('click',()=>{ renderLibrary(); $('#library-modal').style.display='flex'; });
-$('#libClose').addEventListener('click',()=>$('#library-modal').style.display='none');
-$('#lib-scrim').addEventListener('click',()=>$('#library-modal').style.display='none');
-
-/* sidebar drawer for mobile */
-$('#hamburger').addEventListener('click',()=> $('#sidebar').classList.toggle('open'));
-addEventListener('click',e=>{
-  if(innerWidth<=1024){
-    if(!e.target.closest('#sidebar') && !e.target.closest('#hamburger')) $('#sidebar').classList.remove('open');
-  }
-});
+$('#openLibrary').addEventListener('click', ()=>{ renderLibrary(); el.libModal.style.display='flex' });
+el.libClose.addEventListener('click', ()=> el.libModal.style.display='none');
+el.libScrim.addEventListener('click', ()=> el.libModal.style.display='none');
 
 /* settings */
-$('#profileBtn').addEventListener('click',()=>{
-  // seed fields
-  $('#tName').value = state.profile.name||'';
-  $('#tEmail').value = state.profile.email||'';
-  $('#tPhone').value = state.profile.phone||'';
-  $('#uiLang').value = state.settings.uiLang||'English';
-  $('#spokenLang').value = state.settings.spokenLang||'Auto-detect';
-  $('#voiceSel').value = state.settings.voice||'Cove';
-  $('#voiceRate').value = state.settings.rate||1;
-  $('#scrim').style.display='block'; $('#settings').style.display='block';
+$('#openSettings').addEventListener('click', openSettings);
+function openSettings(){
+  // populate
+  el.s_name.value = state.profile.name || '';
+  el.s_email.value = state.profile.email || '';
+  el.s_phone.value = state.profile.phone || '';
+  el.s_pass.value = '';
+  el.s_lang.value = state.settings.lang || 'English';
+  el.s_spoken.value = state.settings.spoken || 'Auto-detect';
+  el.s_voice.value = state.settings.voice || 'Cove';
+  document.getElementById('memList').innerHTML = (state.memories||[])
+    ?.map(m=>`<li>${escapeHtml(m)}</li>`).join('') || '<li style="opacity:.7">No memories yet</li>';
+  el.sOverlay.style.display='block'; el.settings.style.display='block';
+}
+function closeSettings(){ el.settings.style.display='none'; el.sOverlay.style.display='none' }
+el.settingsClose.addEventListener('click', closeSettings);
+el.sOverlay.addEventListener('click', closeSettings);
+el.settingsNav.addEventListener('click', (e)=>{
+  const item = e.target.closest('.item'); if(!item) return;
+  [...el.settingsNav.children].forEach(x=>x.classList.remove('active'));
+  item.classList.add('active');
+  const pane = item.dataset.pane;
+  Object.entries(el.pane).forEach(([k,v])=> v.hidden = (k!==pane));
 });
-$('#scrim').addEventListener('click',()=>{ $('#settings').style.display='none'; $('#scrim').style.display='none'; });
-
-$$('.tab').forEach(t=>t.addEventListener('click',()=>{
-  $$('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
-  $$('.tabpane').forEach(p=>p.style.display='none');
-  $('#tab-'+t.dataset.tab).style.display='block';
-}));
-
-$('#saveAccount').addEventListener('click',()=>{
-  state.profile={ name:$('#tName').value, email:$('#tEmail').value, phone:$('#tPhone').value };
-  saveProfile();
-  $('#profileBtn').textContent=(state.profile.name||'me')+' ▾';
-  alert('Saved.');
+$('#saveAccount').addEventListener('click', ()=>{
+  state.profile = { name:el.s_name.value, email:el.s_email.value, phone:el.s_phone.value };
+  saveProfile(); alert('Account saved.');
 });
-$('#signOut').addEventListener('click',()=>{ alert('Sign out (placeholder).'); });
-$('#deleteAccount').addEventListener('click',()=>{
-  if(confirm('Delete account? This will clear local data.')){
+$('#savePrefs').addEventListener('click', ()=>{
+  state.settings.lang = el.s_lang.value;
+  state.settings.spoken = el.s_spoken.value;
+  state.settings.voice = el.s_voice.value;
+  saveSettings(); alert('Preferences saved.');
+});
+$('#saveConnectors').addEventListener('click', ()=>{
+  const ids = ['gmail','drive','docs','calendar','dropbox','box','notion'];
+  state.settings.connectors = Object.fromEntries(ids.map(id=>[id, document.getElementById('c_'+id).checked]));
+  saveSettings(); alert('Connectors saved (mock).');
+});
+$('#deleteAccount').addEventListener('click', ()=>{
+  if(confirm('Really delete account data on this device?') && confirm('This cannot be undone. Delete?')){
     localStorage.clear(); location.reload();
   }
 });
+$('#signOutBtn').addEventListener('click', ()=>{
+  alert('Sign out (placeholder). Your auth backend can clear session here.');
+  closeSettings();
+});
 
-/* memories (mock) */
-function renderMemories(){
-  $('#memList').innerHTML = state.memories.map((m,i)=>`
-    <div class="conv"><div class="title">${escapeHtml(m)}</div>
-      <div><div class="pill danger" data-i="${i}">Remove</div></div></div>`).join('') || `<div style="opacity:.75">No memories yet.</div>`;
+/* mobile drawer */
+$('#hamburger').addEventListener('click', ()=> el.sidebar.classList.toggle('open'));
+addEventListener('click', (e)=>{ if(innerWidth<=1024){ if(!e.target.closest('#sidebar') && !e.target.closest('#hamburger')) el.sidebar.classList.remove('open'); }});
+
+/* speech – mic (dictation) & voice (read aloud) */
+let recog, recognizing = false;
+function setupRecog(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return null;
+  const r = new SR(); r.lang = (state.settings.spoken||'en-US'); r.interimResults = true; r.continuous = true;
+  r.onresult = (event)=>{
+    let final=''; for(const res of event.results){ if(res.isFinal) final += res[0].transcript + ' '; }
+    if(final){ el.msg.value = (el.msg.value + ' ' + final).trim(); }
+  };
+  r.onerror = ()=>{}; r.onend = ()=>{ recognizing=false; el.mic.textContent='🎙️ Mic'; };
+  return r;
 }
-$('#addMemory').addEventListener('click',()=>{
-  const v=$('#newMemory').value.trim(); if(!v) return;
-  state.memories.unshift(v); $('#newMemory').value=''; saveMemories(); renderMemories();
-});
-$('#memList').addEventListener('click',e=>{
-  if(e.target.matches('.danger')){ const i=+e.target.dataset.i; state.memories.splice(i,1); saveMemories(); renderMemories(); }
+el.mic.addEventListener('click', ()=>{
+  recog = recog || setupRecog();
+  if(!recog){ alert('Speech recognition not supported in this browser.'); return; }
+  if(!recognizing){ recognizing=true; el.mic.textContent='■ Stop'; recog.start(); }
+  else { recognizing=false; el.mic.textContent='🎙️ Mic'; try{recog.stop()}catch{} }
 });
 
-/* language/voice settings */
-$('#uiLang').addEventListener('change',e=>{ state.settings.uiLang=e.target.value; saveSettings(); });
-$('#spokenLang').addEventListener('change',e=>{ state.settings.spokenLang=e.target.value; saveSettings(); });
-$('#voiceSel').addEventListener('change',e=>{ state.settings.voice=e.target.value; saveSettings(); });
-$('#voiceRate').addEventListener('change',e=>{ state.settings.rate=e.target.value; saveSettings(); });
+let isSpeaking = false;
+function speak(text){
+  if(!('speechSynthesis' in window)) { alert('Speech synthesis not supported.'); return; }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text||'');
+  u.rate = 1.0; u.pitch = 1.0; u.onend = ()=>{ if(!isSpeaking) window.speechSynthesis.cancel(); };
+  window.speechSynthesis.speak(u);
+}
+el.voice.addEventListener('click', ()=>{
+  isSpeaking = !isSpeaking;
+  el.voice.textContent = isSpeaking ? 'Voice ▣' : 'Voice';
+  if(isSpeaking){
+    const conv = byId(state.currentConvId);
+    const lastAi = [...(conv?.items||[])].reverse().find(m=>m.role==='ai' && !m.type);
+    if(lastAi) speak(lastAi.text);
+  }else{
+    window.speechSynthesis.cancel();
+  }
+});
 
 /* init */
 (function init(){
-  $('#profileBtn').textContent = (state.profile?.name || 'me') + ' ▾';
-  ensureConv(); renderSidebar(); renderChat(); renderMemories();
+  ensureConv(); renderSidebar(); renderChat();
 })();
 </script>
 </body>
 </html>
+
