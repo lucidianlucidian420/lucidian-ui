@@ -1,147 +1,127 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>Lucidian</title>
 <style>
   :root{
-    --brand-gold: #f2cf66;
-    --brand-gold-soft: rgba(242,207,102,.25);
-    --ink: #d9dde7;
-    --bg-deep: #0a1017;
-    --bubble-user: rgba(60,64,72,.88);
-    --bubble-ai: rgba(240,210,90,.12);
-    --header-h: 76px;           /* slightly thinner bar */
-    --sidebar-w: 320px;
-    --symbol-size: 74px;        /* adjust 64–90px if you want */
-    --rad: 14px;
-    --shadow: 0 10px 32px rgba(0,0,0,.55);
+    --gold:#f2cf66;
+    --gold-soft:rgba(242,207,102,.28);
+    --ink:#d9dde7;
+    --header-h:92px;                 /* thicker bar so symbol sits inside */
+    --sidebar-w:320px;
+    --symbol-size:82px;              /* change 70–92 if you want */
+    --bubble-me:rgba(255,255,255,.14);
+    --bubble-ai:rgba(242,207,102,.12);
+    --outline:rgba(255,255,255,.12);
+    --shadow:0 12px 38px rgba(0,0,0,.6);
   }
 
-  *{ box-sizing:border-box }
-  html,body{ height:100%; margin:0; color:var(--ink);
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
-    background: radial-gradient(1100px 700px at 50% 40%, #123654 0%, #0d2234 44%, var(--bg-deep) 100%);
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  body{
+    overflow:hidden;
+    background: radial-gradient(1400px 900px at 50% 42%, #0c1220 0%, #08101a 34%, #060a10 62%, #05080c 100%);
   }
-  body{ overflow:hidden }
 
-  .app{ height:100%; display:grid; grid-template-rows: var(--header-h) 1fr auto }
+  .app{height:100%;display:grid;grid-template-rows:var(--header-h) 1fr auto}
 
   /* header */
-  .header{ position:sticky; top:0; z-index:20;
-    display:grid; grid-template-columns:auto 1fr auto; align-items:center;
-    padding:0 14px; border-bottom:1px solid rgba(255,255,255,.07);
-    background: linear-gradient(180deg, rgba(15,18,23,.96), rgba(15,18,23,.86));
-  }
-  .hamburger{ display:none; position:relative; z-index:25;
-    padding:8px 10px; border-radius:10px;
-    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:var(--ink);
-    cursor:pointer;
-  }
-  .brand{ display:flex; justify-content:center; align-items:center; letter-spacing:.48rem;
-    color:var(--brand-gold); font-weight:800; font-size:32px; }
-  .symbol{ width:var(--symbol-size); height:var(--symbol-size); min-width:var(--symbol-size); min-height:var(--symbol-size);
-    display:grid; place-items:center; margin-left:10px; border-radius:50%;
-    box-shadow:0 0 18px rgba(242,207,102,.48), inset 0 0 18px rgba(242,207,102,.22);
-    background: radial-gradient(circle at 50% 50%, rgba(242,207,102,.85), rgba(242,207,102,.28) 44%, rgba(242,207,102,.05) 68%, transparent 70%);
-  }
-  .symbol svg{ width:86%; height:86%; display:block; }
+  .header{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:auto 1fr auto;align-items:center;
+    padding:0 16px;border-bottom:1px solid rgba(255,255,255,.08);
+    background:linear-gradient(180deg,rgba(12,14,18,.98),rgba(12,14,18,.9));}
+  .brand{display:flex;justify-content:center;align-items:center;letter-spacing:.48rem;color:var(--gold);font-weight:800;font-size:34px}
+  .symbol{width:var(--symbol-size);height:var(--symbol-size);display:grid;place-items:center;margin-left:10px;
+    border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(242,207,102,.85),rgba(242,207,102,.25) 55%,transparent 58%);
+    box-shadow:0 0 18px rgba(242,207,102,.5),inset 0 0 16px rgba(242,207,102,.22);}
+  .symbol svg{width:86%;height:86%;display:block}
+
+  .hamburger{display:none;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.06);
+    border:1px solid var(--outline);color:var(--ink);cursor:pointer}
 
   /* stars */
-  #stars{ position:absolute; inset:0; z-index:0; pointer-events:none }
+  #stars{position:absolute;inset:0;pointer-events:none;z-index:0}
 
   /* main row */
-  .main{ position:relative; z-index:1; height:100%;
-    display:grid; grid-template-columns: var(--sidebar-w) 1fr; }
+  .main{position:relative;z-index:1;height:100%;display:grid;grid-template-columns:var(--sidebar-w) 1fr}
 
   /* sidebar */
-  .sidebar{ background: linear-gradient(180deg, rgba(15,18,23,.88), rgba(15,18,23,.66));
-    border-right:1px solid rgba(255,255,255,.07); padding:12px; overflow:hidden; }
-  .sidebar-scroll{ height:100%; overflow:auto; padding-right:4px }
-  .row{ display:flex; gap:8px; align-items:center; margin:10px 0 }
-  .btn{ background:linear-gradient(180deg, rgba(242,207,102,.95), rgba(242,207,102,.86));
-    border:0; color:#2b2300; font-weight:800; padding:10px 14px; border-radius:12px; cursor:pointer; }
-  .btn.secondary{ background:rgba(255,255,255,.06); color:var(--ink); border:1px solid rgba(255,255,255,.14); font-weight:600 }
-  .pill{ padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.1);
-    background:rgba(255,255,255,.06); cursor:pointer; user-select:none }
-  .pill.danger{ background:rgba(240,70,70,.18); border-color:rgba(240,70,70,.34); color:#ffdada }
-
-  .input{ flex:1; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.14);
-    color:var(--ink); padding:10px 12px; border-radius:12px }
-
-  .conv{ display:flex; align-items:center; justify-content:space-between; gap:10px;
-    padding:8px; border-radius:10px; background:rgba(255,255,255,.03);
-    border:1px solid rgba(255,255,255,.06); margin:8px 0 }
-  .conv .title{ flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis }
-  .mini{ display:flex; gap:6px }
+  .sidebar{background:linear-gradient(180deg,rgba(15,18,23,.9),rgba(15,18,23,.72));
+    border-right:1px solid rgba(255,255,255,.08);padding:12px;overflow:hidden}
+  .sidebar-scroll{height:100%;overflow:auto;padding-right:4px}
+  .row{display:flex;gap:8px;align-items:center;margin:10px 0}
+  .btn{background:linear-gradient(180deg,rgba(242,207,102,.95),rgba(242,207,102,.86));border:0;color:#2b2300;
+    font-weight:800;padding:10px 14px;border-radius:12px;cursor:pointer}
+  .btn.secondary{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--outline);font-weight:600}
+  .pill{padding:6px 10px;border-radius:999px;border:1px solid var(--outline);background:rgba(255,255,255,.06);cursor:pointer;user-select:none}
+  .pill.danger{background:rgba(240,70,70,.18);border-color:rgba(240,70,70,.34);color:#ffdada}
+  .input{flex:1;background:rgba(0,0,0,.28);border:1px solid var(--outline);color:var(--ink);padding:10px 12px;border-radius:12px}
+  .conv{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px;border-radius:10px;
+    background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);margin:8px 0}
+  .conv .title{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .mini{display:flex;gap:6px}
 
   /* chat */
-  .chat-wrap{ position:relative; overflow:auto; height:100%; padding:18px 18px 112px }
-  .chat{ max-width:1100px; margin:0 auto }
-  .row-bubble{ display:flex }
-  .row-bubble.me{ justify-content:flex-end }
-  .row-bubble.ai{ justify-content:flex-start }
+  .chat-wrap{position:relative;overflow:auto;height:100%;padding:18px 18px 112px;overscroll-behavior:contain}
+  .chat{max-width:1100px;margin:0 auto}
+  .row-bubble{display:flex}
+  .row-bubble.me{justify-content:flex-end}
+  .row-bubble.ai{justify-content:flex-start}
   .bubble{
-    display:inline-block; max-width:70%;
-    margin:10px 12px; padding:12px 14px; border-radius:14px; line-height:1.35;
-    white-space:pre-wrap; word-break:break-word;
-    backdrop-filter: blur(3px); border:1px solid rgba(255,255,255,.12); position:relative;
-  }
-  .bubble.me{ background:var(--bubble-user) }
-  .bubble.ai{ background:var(--bubble-ai); border-color:var(--brand-gold-soft) }
-
-  .actions{ position:absolute; right:-6px; top:-32px; display:flex; gap:6px; opacity:0; pointer-events:none; transition:.12s }
-  .bubble:hover .actions{ opacity:1; pointer-events:auto }
-  .action{ font-size:12px; padding:6px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12);
-    background:rgba(0,0,0,.5); cursor:pointer }
-
-  .bubble .thumb{ display:block; max-width:260px; max-height:200px; border-radius:10px; border:1px solid rgba(255,255,255,.12) }
-  .bubble .file-meta{ font-size:12px; opacity:.85; margin-top:6px }
+    display:inline-block;max-width:62%;margin:10px 12px;padding:10px 12px;border-radius:12px;
+    white-space:pre-wrap;word-break:break-word;line-height:1.35;position:relative;
+    backdrop-filter: blur(2px); border:1px solid var(--outline);}
+  .bubble.me{background:var(--bubble-me)}
+  .bubble.ai{background:var(--bubble-ai);border-color:var(--gold-soft)}
+  .actions{position:absolute;right:-4px;top:-30px;display:flex;gap:6px;opacity:0;pointer-events:none;transition:.12s}
+  .bubble:hover .actions{opacity:1;pointer-events:auto}
+  .action{font-size:12px;padding:5px 8px;border-radius:999px;border:1px solid var(--outline);background:rgba(0,0,0,.55);cursor:pointer}
+  .thumb{display:block;max-width:260px;max-height:200px;border-radius:10px;border:1px solid var(--outline)}
+  .file-meta{font-size:12px;opacity:.85;margin-top:6px}
 
   /* composer */
-  .composer{ position:sticky; bottom:0; z-index:10; border-top:1px solid rgba(255,255,255,.07);
-    background: linear-gradient(180deg, rgba(15,18,23,0), rgba(15,18,23,.92)); padding:10px 14px }
-  .composer-row{ max-width:1100px; margin:0 auto; display:flex; gap:8px }
-  .composer .btn, .composer .input{ height:44px }
+  .composer{position:sticky;bottom:0;z-index:10;border-top:1px solid rgba(255,255,255,.08);
+    background:linear-gradient(180deg,rgba(12,14,18,0),rgba(12,14,18,.95));padding:10px 14px}
+  .composer-row{max-width:1100px;margin:0 auto;display:flex;gap:8px}
+  .composer .btn,.composer .input{height:44px}
 
   /* library modal */
-  #library-modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:1500 }
-  #library-scrim{ position:absolute; inset:0; background:rgba(0,0,0,.45); backdrop-filter: blur(2px) }
-  #library-card{ position:relative; width:min(900px,92vw); max-height:min(72vh,800px); overflow:auto; padding:16px;
-    border-radius:16px; background:rgba(18,19,23,.96); border:1px solid rgba(255,255,255,.12); box-shadow:var(--shadow) }
-  .lib-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:12px }
-  .lib-item{ border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); border-radius:12px; padding:10px }
-  .lib-item .thumb{ display:block; width:100%; height:150px; object-fit:cover; border-radius:8px; border:1px solid rgba(255,255,255,.12) }
-  .lib-actions{ display:flex; gap:8px; margin-top:6px }
-  .close-x{ position:absolute; right:14px; top:12px; padding:6px 10px; border-radius:10px;
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); cursor:pointer }
+  #library-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1500}
+  #library-scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(2px)}
+  #library-card{position:relative;width:min(900px,92vw);max-height:min(72vh,800px);overflow:auto;padding:16px;border-radius:16px;
+    background:rgba(18,19,23,.97);border:1px solid var(--outline);box-shadow:var(--shadow)}
+  .lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+  .lib-item{border:1px solid var(--outline);background:rgba(255,255,255,.04);border-radius:12px;padding:10px}
+  .lib-item .thumb{display:block;width:100%;height:150px;object-fit:cover;border-radius:8px;border:1px solid var(--outline)}
+  .lib-actions{display:flex;gap:8px;margin-top:6px}
+  .close-x{position:absolute;right:14px;top:12px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.18);cursor:pointer}
 
   /* settings overlay */
-  #settings-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.35); backdrop-filter: blur(2px); display:none; z-index:1600 }
-  #settings{ position:fixed; top:84px; left:50%; transform:translateX(-50%); width:min(920px,96vw);
-    max-height:min(78vh,900px); overflow:auto; background:rgba(20,20,22,.96);
-    border:1px solid var(--brand-gold-soft); border-radius:14px; padding:0; box-shadow:var(--shadow); display:none; z-index:1700 }
-  .settings-head{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.08) }
-  .settings-body{ display:grid; grid-template-columns: 220px 1fr; min-height:360px }
-  .settings-nav{ border-right:1px solid rgba(255,255,255,.08); padding:10px }
-  .settings-nav .item{ padding:10px 12px; border-radius:10px; cursor:pointer }
-  .settings-nav .item.active{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12) }
-  .settings-pane{ padding:16px }
-  .field{ display:flex; flex-direction:column; gap:6px; margin:10px 0 }
-  .field input, .field select{ background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.14); color:var(--ink);
-    padding:10px 12px; border-radius:10px }
-  .danger-zone{ margin-top:14px; padding:12px; border:1px solid rgba(240,70,70,.35); background:rgba(240,70,70,.1); border-radius:12px }
+  #settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);display:none;z-index:1600}
+  #settings{position:fixed;top:92px;left:50%;transform:translateX(-50%);width:min(980px,96vw);max-height:min(80vh,900px);
+    overflow:auto;background:rgba(20,20,22,.98);border:1px solid var(--gold-soft);border-radius:14px;padding:0;box-shadow:var(--shadow);display:none;z-index:1700}
+  .settings-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .settings-body{display:grid;grid-template-columns:220px 1fr;min-height:360px}
+  .settings-nav{border-right:1px solid rgba(255,255,255,.08);padding:10px}
+  .settings-nav .item{padding:10px 12px;border-radius:10px;cursor:pointer}
+  .settings-nav .item.active{background:rgba(255,255,255,.06);border:1px solid var(--outline)}
+  .settings-pane{padding:16px}
+  .field{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+  .field input,.field select{background:rgba(0,0,0,.28);border:1px solid var(--outline);color:var(--ink);padding:10px 12px;border-radius:10px}
+  .links a{display:inline-block;margin:6px 10px 0 0;padding:8px 12px;border:1px solid var(--outline);border-radius:10px;text-decoration:none;color:var(--ink);background:rgba(255,255,255,.06)}
 
   /* responsive */
   @media (max-width:1024px){
-    .hamburger{ display:block }
-    .main{ grid-template-columns: 1fr }
-    .sidebar{ position:fixed; z-index:25; top:var(--header-h); left:0; height:calc(100% - var(--header-h));
-      width:min(86vw,360px); transform:translateX(-110%); transition:transform .18s }
-    .sidebar.open{ transform:translateX(0) }
-    .chat-wrap{ padding:16px 12px 104px }
-    .bubble{ max-width:86% }
+    .hamburger{display:block}
+    .main{grid-template-columns:1fr}
+    .sidebar{position:fixed;z-index:25;top:var(--header-h);left:0;height:calc(100% - var(--header-h));width:min(86vw,360px);transform:translateX(-110%);transition:transform .18s}
+    .sidebar.open{transform:translateX(0)}
+    .chat-wrap{padding:16px 12px 104px}
+    .bubble{max-width:86%}
+    :root{--symbol-size:64px}
   }
 </style>
 </head>
@@ -151,28 +131,24 @@
   <div class="header">
     <button id="hamburger" class="hamburger">☰</button>
     <div class="brand">L U C I D I A N</div>
-    <div class="symbol" title="Lucidian">
-      <!-- golden rosette (retains the look you liked) -->
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <g stroke="#f2cf66" stroke-width="1.2" fill="none" opacity=".95">
-          <!-- 24 interlaced circles to emulate the lattice -->
-          <!-- generated paths: circles of radius 32 rotated around center -->
-          <defs><circle id="c" cx="50" cy="18" r="32"/></defs>
-          <g opacity=".95">
-            <!-- rotate 24 times -->
-            <use href="#c"/><use href="#c" transform="rotate(15,50,50)"/>
-            <use href="#c" transform="rotate(30,50,50)"/><use href="#c" transform="rotate(45,50,50)"/>
-            <use href="#c" transform="rotate(60,50,50)"/><use href="#c" transform="rotate(75,50,50)"/>
-            <use href="#c" transform="rotate(90,50,50)"/><use href="#c" transform="rotate(105,50,50)"/>
-            <use href="#c" transform="rotate(120,50,50)"/><use href="#c" transform="rotate(135,50,50)"/>
-            <use href="#c" transform="rotate(150,50,50)"/><use href="#c" transform="rotate(165,50,50)"/>
-            <use href="#c" transform="rotate(180,50,50)"/><use href="#c" transform="rotate(195,50,50)"/>
-            <use href="#c" transform="rotate(210,50,50)"/><use href="#c" transform="rotate(225,50,50)"/>
-            <use href="#c" transform="rotate(240,50,50)"/><use href="#c" transform="rotate(255,50,50)"/>
-            <use href="#c" transform="rotate(270,50,50)"/><use href="#c" transform="rotate(285,50,50)"/>
-            <use href="#c" transform="rotate(300,50,50)"/><use href="#c" transform="rotate(315,50,50)"/>
-            <use href="#c" transform="rotate(330,50,50)"/><use href="#c" transform="rotate(345,50,50)"/>
-          </g>
+    <div class="symbol" aria-hidden="true">
+      <!-- classic rosette (concentric interlaced circles) -->
+      <svg viewBox="0 0 100 100">
+        <g stroke="#f2cf66" stroke-width="1.2" fill="none" opacity=".96">
+          <defs><circle id="r" cx="50" cy="18" r="32"/></defs>
+          <!-- 24 rotations to create the rosette look -->
+          <use href="#r"/><use href="#r" transform="rotate(15,50,50)"/>
+          <use href="#r" transform="rotate(30,50,50)"/><use href="#r" transform="rotate(45,50,50)"/>
+          <use href="#r" transform="rotate(60,50,50)"/><use href="#r" transform="rotate(75,50,50)"/>
+          <use href="#r" transform="rotate(90,50,50)"/><use href="#r" transform="rotate(105,50,50)"/>
+          <use href="#r" transform="rotate(120,50,50)"/><use href="#r" transform="rotate(135,50,50)"/>
+          <use href="#r" transform="rotate(150,50,50)"/><use href="#r" transform="rotate(165,50,50)"/>
+          <use href="#r" transform="rotate(180,50,50)"/><use href="#r" transform="rotate(195,50,50)"/>
+          <use href="#r" transform="rotate(210,50,50)"/><use href="#r" transform="rotate(225,50,50)"/>
+          <use href="#r" transform="rotate(240,50,50)"/><use href="#r" transform="rotate(255,50,50)"/>
+          <use href="#r" transform="rotate(270,50,50)"/><use href="#r" transform="rotate(285,50,50)"/>
+          <use href="#r" transform="rotate(300,50,50)"/><use href="#r" transform="rotate(315,50,50)"/>
+          <use href="#r" transform="rotate(330,50,50)"/><use href="#r" transform="rotate(345,50,50)"/>
         </g>
       </svg>
     </div>
@@ -187,13 +163,13 @@
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-scroll">
         <div class="row" style="margin-top:2px">
-          <button id="newConv" class="btn" style="flex:1">New</button>
-          <button id="openLibrary" class="btn secondary">Open</button>
-          <button id="openSettings" class="btn secondary">Settings</button>
+          <button id="newConv" class="btn" style="flex:1"></button>
+          <button id="openLibrary" class="btn secondary"></button>
+          <button id="openSettings" class="btn secondary"></button>
         </div>
         <div class="row">
-          <input id="searchBox" class="input" placeholder="Search conversations...">
-          <button id="searchGo" class="btn secondary">Go</button>
+          <input id="searchBox" class="input"/>
+          <button id="searchGo" class="btn secondary"></button>
         </div>
         <div id="convList"></div>
       </div>
@@ -210,11 +186,11 @@
     <div class="composer-row">
       <input id="fileInput" type="file" multiple style="display:none"
              accept="image/*,video/*,application/pdf,.txt,.md,.doc,.docx,.xlsx,.ppt,.pptx,application/*">
-      <button id="attach" class="btn secondary">Attach</button>
-      <button id="mic" class="btn secondary">🎙️ Mic</button>
-      <input id="msg" class="input" placeholder="Type a message...">
-      <button id="send" class="btn">Send</button>
-      <button id="voice" class="btn secondary">Voice</button>
+      <button id="attach" class="btn secondary"></button>
+      <button id="mic" class="btn secondary">🎙️</button>
+      <input id="msg" class="input"/>
+      <button id="send" class="btn"></button>
+      <button id="voice" class="btn secondary"></button>
     </div>
   </div>
 </div>
@@ -223,8 +199,8 @@
 <div id="library-modal">
   <div id="library-scrim"></div>
   <div id="library-card">
-    <button id="libraryClose" class="close-x">Close</button>
-    <h3 style="margin:0 0 12px 0">Shared Library</h3>
+    <button id="libraryClose" class="close-x"></button>
+    <h3 id="libraryTitle" style="margin:0 0 12px 0"></h3>
     <div id="libraryGrid" class="lib-grid"></div>
   </div>
 </div>
@@ -234,179 +210,306 @@
 <div id="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title">
   <div class="settings-head">
     <strong id="settings-title">Settings</strong>
-    <button id="settingsClose" class="close-x">Close</button>
+    <button id="settingsClose" class="close-x"></button>
   </div>
   <div class="settings-body">
     <nav class="settings-nav" id="settingsNav">
-      <div class="item active" data-pane="account">Account</div>
-      <div class="item" data-pane="preferences">Preferences</div>
-      <div class="item" data-pane="memories">Memories</div>
-      <div class="item" data-pane="connectors">Connectors</div>
-      <div class="item" data-pane="danger">Danger Zone</div>
-      <div class="item" id="signOutBtn">Sign out</div>
+      <div class="item active" data-pane="account" id="navAccount"></div>
+      <div class="item" data-pane="preferences" id="navPrefs"></div>
+      <div class="item" data-pane="memories" id="navMems"></div>
+      <div class="item" data-pane="connectors" id="navConn"></div>
+      <div class="item" data-pane="danger" id="navDanger"></div>
+      <div class="item" id="signOutBtn"></div>
     </nav>
     <section class="settings-pane" id="pane-account">
-      <div class="field"><label>Name <input id="s_name" type="text"></label></div>
-      <div class="field"><label>Email <input id="s_email" type="email"></label></div>
-      <div class="field"><label>Phone <input id="s_phone" type="tel"></label></div>
-      <div class="field"><label>Password <input id="s_pass" type="password" placeholder="••••••••"></label></div>
-      <button id="saveAccount" class="btn">Save</button>
+      <div class="field"><label id="lblName"></label><input id="s_name" type="text"></div>
+      <div class="field"><label id="lblEmail"></label><input id="s_email" type="email"></div>
+      <div class="field"><label id="lblPhone"></label><input id="s_phone" type="tel"></div>
+      <div class="field"><label id="lblPass"></label><input id="s_pass" type="password" placeholder="••••••••"></div>
+      <button id="saveAccount" class="btn"></button>
     </section>
     <section class="settings-pane" id="pane-preferences" hidden>
-      <div class="field"><label>UI language
+      <div class="field"><label id="lblUILang"></label>
         <select id="s_lang">
-          <option>English</option><option>Español</option><option>Français</option>
+          <option>English</option><option>Español</option><option>Français</option><option>Deutsch</option>
+          <option>Português</option><option>Italiano</option><option>हिन्दी</option>
+          <option>中文</option><option>日本語</option><option>한국어</option>
+        </select>
+      </div>
+      <div class="field"><label id="lblSpoken"></label>
+        <select id="s_spoken">
+          <option>Auto</option><option>English</option><option>Español</option><option>Français</option>
           <option>Deutsch</option><option>Português</option><option>Italiano</option>
           <option>हिन्दी</option><option>中文</option><option>日本語</option><option>한국어</option>
-        </select></label></div>
-      <div class="field"><label>Spoken language
-        <select id="s_spoken">
-          <option>Auto-detect</option><option>English</option><option>Spanish</option>
-          <option>French</option><option>German</option><option>Portuguese</option>
-          <option>Hindi</option><option>Chinese</option><option>Japanese</option><option>Korean</option>
-        </select></label></div>
-      <div class="field"><label>Voice
+        </select>
+      </div>
+      <div class="field"><label id="lblVoice"></label>
         <select id="s_voice">
-          <option>Cove</option><option>Ember</option><option>Breeze</option>
-          <option>Sol</option><option>Terra</option>
-        </select></label></div>
-      <button id="savePrefs" class="btn">Save</button>
+          <option>Orion</option><option>Lyra</option><option>Atlas</option><option>Selene</option><option>Quill</option>
+        </select>
+      </div>
+      <button id="savePrefs" class="btn"></button>
     </section>
     <section class="settings-pane" id="pane-memories" hidden>
-      <p style="opacity:.85">Saved memories (demo):</p>
+      <p id="memListTitle" style="opacity:.85"></p>
       <ul id="memList"></ul>
     </section>
     <section class="settings-pane" id="pane-connectors" hidden>
-      <p style="opacity:.85">Connect your apps (mock toggles for now):</p>
-      <div class="row"><label><input type="checkbox" id="c_gmail"> Gmail</label></div>
-      <div class="row"><label><input type="checkbox" id="c_drive"> Google Drive</label></div>
-      <div class="row"><label><input type="checkbox" id="c_docs"> Google Docs</label></div>
-      <div class="row"><label><input type="checkbox" id="c_calendar"> Google Calendar</label></div>
-      <div class="row"><label><input type="checkbox" id="c_dropbox"> Dropbox</label></div>
-      <div class="row"><label><input type="checkbox" id="c_box"> Box</label></div>
-      <div class="row"><label><input type="checkbox" id="c_notion"> Notion</label></div>
-      <button id="saveConnectors" class="btn">Save</button>
+      <p id="connNote" style="opacity:.85"></p>
+      <div class="links" id="connLinks">
+        <a href="https://mail.google.com" target="_blank" rel="noopener">Gmail</a>
+        <a href="https://drive.google.com" target="_blank" rel="noopener">Google Drive</a>
+        <a href="https://calendar.google.com" target="_blank" rel="noopener">Google Calendar</a>
+        <a href="https://docs.google.com" target="_blank" rel="noopener">Google Docs</a>
+        <a href="https://nextcloud.com" target="_blank" rel="noopener">Nextcloud (open-source)</a>
+        <a href="https://www.onlyoffice.com" target="_blank" rel="noopener">ONLYOFFICE (open-source)</a>
+      </div>
     </section>
     <section class="settings-pane" id="pane-danger" hidden>
       <div class="danger-zone">
-        <strong>Delete account</strong>
-        <p style="opacity:.85; margin:.4rem 0 1rem">This will remove your local data on this device (demo). You’ll be asked to confirm.</p>
-        <button id="deleteAccount" class="btn pill danger" style="border-radius:10px">Delete account</button>
+        <strong id="dangerTitle"></strong>
+        <p id="dangerText" style="opacity:.85;margin:.4rem 0 1rem"></p>
+        <button id="deleteAccount" class="btn pill danger" style="border-radius:10px"></button>
       </div>
     </section>
   </div>
 </div>
 
 <script>
-/* state */
+/* ========= tiny state ========= */
 const state = {
-  currentConvId: null,
-  conversations: JSON.parse(localStorage.getItem('convs') || '[]'),
-  library: JSON.parse(localStorage.getItem('library') || '[]'),
-  profile: JSON.parse(localStorage.getItem('profile') || '{"name":"kyle","email":"kylejenkins2468@gmail.com"}'),
-  settings: JSON.parse(localStorage.getItem('settings') || '{"lang":"English","spoken":"Auto-detect","voice":"Cove","connectors":{}}')
+  currentConvId:null,
+  conversations: JSON.parse(localStorage.getItem('convs')||'[]'),
+  library: JSON.parse(localStorage.getItem('library')||'[]'),
+  profile: JSON.parse(localStorage.getItem('profile')||'{"name":"kyle","email":"kylejenkins2468@gmail.com"}'),
+  settings: JSON.parse(localStorage.getItem('settings')||'{"lang":"English","spoken":"Auto","voice":"Orion"}'),
+  memories: JSON.parse(localStorage.getItem('memories')||'[]')
+};
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const el={
+  chat:$('#chat'), chatWrap:$('#chatWrap'), convList:$('#convList'), msg:$('#msg'),
+  fileInput:$('#fileInput'), mic:$('#mic'), voice:$('#voice'),
+  libModal:$('#library-modal'), libScrim:$('#library-scrim'), libClose:$('#libraryClose'), libGrid:$('#libraryGrid'),
+  sOverlay:$('#settings-overlay'), settings:$('#settings'), settingsNav:$('#settingsNav'),
+  panes:{account:$('#pane-account'), preferences:$('#pane-preferences'), memories:$('#pane-memories'), connectors:$('#pane-connectors'), danger:$('#pane-danger')}
 };
 
-const $ = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
-
-const el = {
-  chat: $('#chat'), chatWrap: $('#chatWrap'),
-  convList: $('#convList'), msg: $('#msg'),
-  stars: $('#stars'), sidebar: $('#sidebar'),
-  fileInput: $('#fileInput'), mic: $('#mic'), voice: $('#voice'),
-
-  // library
-  libModal: $('#library-modal'), libScrim: $('#library-scrim'),
-  libClose: $('#libraryClose'), libGrid: $('#libraryGrid'),
-
-  // settings
-  sOverlay: $('#settings-overlay'), settings: $('#settings'),
-  settingsClose: $('#settingsClose'), settingsNav: $('#settingsNav'),
-  pane: {
-    account: $('#pane-account'), preferences: $('#pane-preferences'),
-    memories: $('#pane-memories'), connectors: $('#pane-connectors'),
-    danger: $('#pane-danger')
-  },
-  // account fields
-  s_name: $('#s_name'), s_email: $('#s_email'), s_phone: $('#s_phone'), s_pass: $('#s_pass'),
-  s_lang: $('#s_lang'), s_spoken: $('#s_spoken'), s_voice: $('#s_voice')
+/* ========= i18n ========= */
+const tr={
+  English:{New:"New",OpenLibrary:"Open",Settings:"Settings",SearchPh:"Search conversations...",Go:"Go",
+    Attach:"Attach",Send:"Send",Voice:"Voice",Close:"Close",SharedLibrary:"Shared Library",
+    Select:"Select",Del:"Del",DeleteConfirm:"Delete this conversation? This cannot be undone.",
+    Echo:"Echoing intention:", Copy:"Copy", Edit:"Edit", Read:"Read", Reply:"Reply",
+    Account:"Account",Preferences:"Preferences",Memories:"Memories",Connectors:"Connectors",Danger:"Danger Zone",
+    SignOut:"Sign out", Name:"Name",Email:"Email",Phone:"Phone",Password:"Password",Save:"Save",
+    UILang:"UI language",Spoken:"Spoken language",VoiceLbl:"Voice",MemList:"Saved memories (demo):",
+    ConnNote:"Open links to connect your accounts or services.",
+    DangerTitle:"Delete account", DangerText:"This clears local data on this device (demo). You will be asked to confirm.",
+    DeleteAccount:"Delete account"},
+  Español:{New:"Nuevo",OpenLibrary:"Abrir",Settings:"Ajustes",SearchPh:"Buscar conversaciones...",Go:"Ir",
+    Attach:"Adjuntar",Send:"Enviar",Voice:"Voz",Close:"Cerrar",SharedLibrary:"Biblioteca compartida",
+    Select:"Elegir",Del:"Borrar",DeleteConfirm:"¿Borrar esta conversación? No se puede deshacer.",
+    Echo:"Intención reflejada:", Copy:"Copiar", Edit:"Editar", Read:"Leer", Reply:"Responder",
+    Account:"Cuenta",Preferences:"Preferencias",Memories:"Memorias",Connectors:"Conectores",Danger:"Zona de riesgo",
+    SignOut:"Cerrar sesión", Name:"Nombre",Email:"Correo",Phone:"Teléfono",Password:"Contraseña",Save:"Guardar",
+    UILang:"Idioma de la interfaz",Spoken:"Idioma hablado",VoiceLbl:"Voz",MemList:"Memorias guardadas (demo):",
+    ConnNote:"Abre enlaces para conectar tus cuentas o servicios.",
+    DangerTitle:"Eliminar cuenta", DangerText:"Esto borra los datos locales en este dispositivo (demo). Se te pedirá confirmación.",
+    DeleteAccount:"Eliminar cuenta"},
+  Français:{New:"Nouveau",OpenLibrary:"Ouvrir",Settings:"Réglages",SearchPh:"Rechercher des conversations…",Go:"Aller",
+    Attach:"Joindre",Send:"Envoyer",Voice:"Voix",Close:"Fermer",SharedLibrary:"Bibliothèque partagée",
+    Select:"Sélect.",Del:"Suppr.",DeleteConfirm:"Supprimer cette conversation ? Action irréversible.",
+    Echo:"Intention reflétée :", Copy:"Copier", Edit:"Modifier", Read:"Lire", Reply:"Répondre",
+    Account:"Compte",Preferences:"Préférences",Memories:"Mémoires",Connectors:"Connecteurs",Danger:"Zone dangereuse",
+    SignOut:"Se déconnecter", Name:"Nom",Email:"Email",Phone:"Téléphone",Password:"Mot de passe",Save:"Enregistrer",
+    UILang:"Langue de l’interface",Spoken:"Langue parlée",VoiceLbl:"Voix",MemList:"Mémoires enregistrées (démo) :",
+    ConnNote:"Ouvrez les liens pour connecter vos services.",
+    DangerTitle:"Supprimer le compte", DangerText:"Efface les données locales sur cet appareil (démo). Confirmation requise.",
+    DeleteAccount:"Supprimer le compte"},
+  Deutsch:{New:"Neu",OpenLibrary:"Öffnen",Settings:"Einstellungen",SearchPh:"Unterhaltungen suchen…",Go:"Los",
+    Attach:"Anhängen",Send:"Senden",Voice:"Sprache",Close:"Schließen",SharedLibrary:"Geteilte Bibliothek",
+    Select:"Wählen",Del:"Löschen",DeleteConfirm:"Diese Unterhaltung löschen? Dies kann nicht rückgängig gemacht werden.",
+    Echo:"Absicht wiedergegeben:", Copy:"Kopieren", Edit:"Bearbeiten", Read:"Vorlesen", Reply:"Antworten",
+    Account:"Konto",Preferences:"Voreinstellungen",Memories:"Erinnerungen",Connectors:"Verbinder",Danger:"Gefahrenzone",
+    SignOut:"Abmelden", Name:"Name",Email:"E-Mail",Phone:"Telefon",Password:"Passwort",Save:"Speichern",
+    UILang:"UI-Sprache",Spoken:"Gesprochene Sprache",VoiceLbl:"Stimme",MemList:"Gespeicherte Erinnerungen (Demo):",
+    ConnNote:"Öffnen Sie Links, um Ihre Dienste zu verbinden.",
+    DangerTitle:"Konto löschen", DangerText:"Löscht lokale Daten auf diesem Gerät (Demo). Bestätigung erforderlich.",
+    DeleteAccount:"Konto löschen"},
+  Português:{New:"Novo",OpenLibrary:"Abrir",Settings:"Configurações",SearchPh:"Buscar conversas…",Go:"Ir",
+    Attach:"Anexar",Send:"Enviar",Voice:"Voz",Close:"Fechar",SharedLibrary:"Biblioteca compartilhada",
+    Select:"Selecionar",Del:"Excluir",DeleteConfirm:"Excluir esta conversa? Não pode ser desfeito.",
+    Echo:"Intenção refletida:", Copy:"Copiar", Edit:"Editar", Read:"Ler", Reply:"Responder",
+    Account:"Conta",Preferences:"Preferências",Memories:"Memórias",Connectors:"Conectores",Danger:"Zona de risco",
+    SignOut:"Sair", Name:"Nome",Email:"Email",Phone:"Telefone",Password:"Senha",Save:"Salvar",
+    UILang:"Idioma da interface",Spoken:"Idioma falado",VoiceLbl:"Voz",MemList:"Memórias salvas (demo):",
+    ConnNote:"Abra links para conectar serviços.",
+    DangerTitle:"Excluir conta", DangerText:"Apaga os dados locais neste dispositivo (demo). Confirmação será solicitada.",
+    DeleteAccount:"Excluir conta"},
+  Italiano:{New:"Nuova",OpenLibrary:"Apri",Settings:"Impostazioni",SearchPh:"Cerca conversazioni…",Go:"Vai",
+    Attach:"Allega",Send:"Invia",Voice:"Voce",Close:"Chiudi",SharedLibrary:"Libreria condivisa",
+    Select:"Selez.",Del:"Elim.",DeleteConfirm:"Eliminare la conversazione? Operazione irreversibile.",
+    Echo:"Intenzione rispecchiata:", Copy:"Copia", Edit:"Modifica", Read:"Leggi", Reply:"Rispondi",
+    Account:"Account",Preferences:"Preferenze",Memories:"Memorie",Connectors:"Connettori",Danger:"Zona pericolosa",
+    SignOut:"Esci", Name:"Nome",Email:"Email",Phone:"Telefono",Password:"Password",Save:"Salva",
+    UILang:"Lingua dell’interfaccia",Spoken:"Lingua parlata",VoiceLbl:"Voce",MemList:"Memorie salvate (demo):",
+    ConnNote:"Apri i link per collegare i servizi.",
+    DangerTitle:"Elimina account", DangerText:"Cancella i dati locali su questo dispositivo (demo). Richiesta conferma.",
+    DeleteAccount:"Elimina account"},
+  "日本語":{New:"新規",OpenLibrary:"ライブラリ",Settings:"設定",SearchPh:"会話を検索…",Go:"検索",
+    Attach:"添付",Send:"送信",Voice:"音声",Close:"閉じる",SharedLibrary:"共有ライブラリ",
+    Select:"選択",Del:"削除",DeleteConfirm:"この会話を削除しますか？元に戻せません。",
+    Echo:"意図を反映：", Copy:"コピー", Edit:"編集", Read:"読み上げ", Reply:"返信",
+    Account:"アカウント",Preferences:"環境設定",Memories:"メモリー",Connectors:"コネクタ",Danger:"危険ゾーン",
+    SignOut:"サインアウト", Name:"名前",Email:"メール",Phone:"電話",Password:"パスワード",Save:"保存",
+    UILang:"UI言語",Spoken:"話し言葉",VoiceLbl:"ボイス",MemList:"保存済みメモリー（デモ）:",
+    ConnNote:"サービスへ接続するリンクを開きます。",
+    DangerTitle:"アカウント削除", DangerText:"この端末のローカルデータを消去します（デモ）。確認が必要です。",
+    DeleteAccount:"アカウント削除"},
+  "한국어":{New:"새 대화",OpenLibrary:"열기",Settings:"설정",SearchPh:"대화 검색…",Go:"이동",
+    Attach:"첨부",Send:"보내기",Voice:"음성",Close:"닫기",SharedLibrary:"공유 라이브러리",
+    Select:"선택",Del:"삭제",DeleteConfirm:"이 대화를 삭제할까요? 되돌릴 수 없습니다.",
+    Echo:"의도 반영:", Copy:"복사", Edit:"편집", Read:"읽기", Reply:"답장",
+    Account:"계정",Preferences:"환경설정",Memories:"메모리",Connectors:"연결",Danger:"위험 영역",
+    SignOut:"로그아웃", Name:"이름",Email:"이메일",Phone:"전화",Password:"비밀번호",Save:"저장",
+    UILang:"UI 언어",Spoken:"음성 언어",VoiceLbl:"보이스",MemList:"저장된 메모리(데모):",
+    ConnNote:"서비스 연결을 위해 링크를 여세요.",
+    DangerTitle:"계정 삭제", DangerText:"이 기기의 로컬 데이터를 삭제합니다(데모). 확인이 필요합니다.",
+    DeleteAccount:"계정 삭제"},
+  "中文":{New:"新会话",OpenLibrary:"打开",Settings:"设置",SearchPh:"搜索会话…",Go:"前往",
+    Attach:"附件",Send:"发送",Voice:"语音",Close:"关闭",SharedLibrary:"共享库",
+    Select:"选择",Del:"删除",DeleteConfirm:"删除此会话？该操作不可撤销。",
+    Echo:"意图回声：", Copy:"复制", Edit:"编辑", Read:"朗读", Reply:"回复",
+    Account:"账户",Preferences:"偏好",Memories:"记忆",Connectors:"连接器",Danger:"危险区域",
+    SignOut:"退出登录", Name:"姓名",Email:"邮箱",Phone:"电话",Password:"密码",Save:"保存",
+    UILang:"界面语言",Spoken:"口语语言",VoiceLbl:"声音",MemList:"已保存记忆（演示）：",
+    ConnNote:"打开链接以连接您的服务。",
+    DangerTitle:"删除账户", DangerText:"清除此设备上的本地数据（演示）。需要确认。",
+    DeleteAccount:"删除账户"},
+  "हिन्दी":{New:"नया",OpenLibrary:"खोलें",Settings:"सेटिंग्स",SearchPh:"वार्तालाप खोजें…",Go:"जाएँ",
+    Attach:"संलग्न करें",Send:"भेजें",Voice:"आवाज़",Close:"बंद करें",SharedLibrary:"साझा लाइब्रेरी",
+    Select:"चुनें",Del:"हटाएँ",DeleteConfirm:"क्या वार्तालाप हटाएँ? इसे वापस नहीं किया जा सकता।",
+    Echo:"उद्देश्य प्रतिध्वनि:", Copy:"कॉपी", Edit:"संपादित", Read:"पढ़ें", Reply:"जवाब",
+    Account:"खाता",Preferences:"वरीयताएँ",Memories:"स्मृतियाँ",Connectors:"कनेक्टर्स",Danger:"खतरे का क्षेत्र",
+    SignOut:"साइन आउट", Name:"नाम",Email:"ईमेल",Phone:"फ़ोन",Password:"पासवर्ड",Save:"सहेजें",
+    UILang:"UI भाषा",Spoken:"बोली जाने वाली भाषा",VoiceLbl:"वॉयस",MemList:"सहेजी गई स्मृतियाँ (डेमो):",
+    ConnNote:"सेवाएँ जोड़ने के लिए लिंक खोलें।",
+    DangerTitle:"खाता हटाएँ", DangerText:"इस डिवाइस के स्थानीय डेटा साफ़ होंगे (डेमो)। पुष्टि आवश्यक।",
+    DeleteAccount:"खाता हटाएँ"}
 };
+function t(k){ return tr[state.settings.lang||'English'][k]||tr.English[k]||k }
+function applyI18n(){
+  // buttons & labels
+  $('#newConv').textContent=t('New');
+  $('#openLibrary').textContent=t('OpenLibrary');
+  $('#openSettings').textContent=t('Settings');
+  $('#searchBox').placeholder=t('SearchPh');
+  $('#searchGo').textContent=t('Go');
+  $('#attach').textContent=t('Attach');
+  $('#send').textContent=t('Send');
+  $('#voice').textContent=t('Voice');
+  $('#libraryTitle').textContent=t('SharedLibrary');
+  $('#libraryClose').textContent=t('Close');
 
-/* stars */
+  // settings nav/labels
+  $('#settings-title').textContent=t('Settings');
+  $('#settingsClose').textContent=t('Close');
+  $('#navAccount').textContent=t('Account');
+  $('#navPrefs').textContent=t('Preferences');
+  $('#navMems').textContent=t('Memories');
+  $('#navConn').textContent=t('Connectors');
+  $('#navDanger').textContent=t('Danger');
+  $('#signOutBtn').textContent=t('SignOut');
+
+  $('#lblName').textContent=t('Name');
+  $('#lblEmail').textContent=t('Email');
+  $('#lblPhone').textContent=t('Phone');
+  $('#lblPass').textContent=t('Password');
+  $('#saveAccount').textContent=t('Save');
+
+  $('#lblUILang').textContent=t('UILang');
+  $('#lblSpoken').textContent=t('Spoken');
+  $('#lblVoice').textContent=t('VoiceLbl');
+  $('#savePrefs').textContent=t('Save');
+
+  $('#memListTitle').textContent=t('MemList');
+  $('#connNote').textContent=t('ConnNote');
+  $('#dangerTitle').textContent=t('DangerTitle');
+  $('#dangerText').textContent=t('DangerText');
+  $('#deleteAccount').textContent=t('DeleteAccount');
+}
+
+/* ========= stars (dense + darker space) ========= */
 (function stars(){
-  const c = el.stars, ctx = c.getContext('2d');
-  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  const c=$('#stars'), ctx=c.getContext('2d');
+  function resize(){ c.width=innerWidth; c.height=innerHeight }
   resize();
-  // more stars
-  const n = Math.round((c.width*c.height)/8000);
-  const stars = Array.from({length:n}, ()=>({x:Math.random()*c.width, y:Math.random()*c.height, z:Math.random()*0.8+0.3, tw:Math.random()*0.8+0.2}));
+  const num=Math.round((c.width*c.height)/6500); // more stars
+  const stars=Array.from({length:num},()=>({x:Math.random()*c.width,y:Math.random()*c.height,z:Math.random()*0.9+0.2,tw:Math.random()*0.8+0.2}));
   function tick(){
     ctx.clearRect(0,0,c.width,c.height);
     for(const s of stars){
-      const size = s.z*1.8;
-      ctx.fillStyle = `rgba(255,255,255,${0.7*s.tw})`;
+      const size=s.z*1.7;
+      ctx.fillStyle=`rgba(255,255,255,${0.75*s.tw})`;
       ctx.fillRect(s.x,s.y,size,size);
-      s.x += 0.035*s.z; if(s.x>c.width+2) s.x = -2;
-      s.tw += (Math.random()-.5)*0.02; s.tw = Math.min(1,Math.max(.2,s.tw));
+      s.x+=0.03*s.z; if(s.x>c.width+2) s.x=-2;
+      s.tw+= (Math.random()-.5)*0.02; s.tw=Math.min(1,Math.max(.2,s.tw));
     }
     requestAnimationFrame(tick);
   }
-  addEventListener('resize', resize);
-  tick();
+  addEventListener('resize',resize); tick();
 })();
 
-/* helpers */
-const uuid = () => (crypto.randomUUID ? crypto.randomUUID() :
-  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c=>{
-    const r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8); return v.toString(16)
-  })
-);
-const byId = id => state.conversations.find(c=>c.id===id);
-const saveConvs = ()=> localStorage.setItem('convs', JSON.stringify(state.conversations));
-const saveLib = ()=> localStorage.setItem('library', JSON.stringify(state.library));
-const saveProfile = ()=> localStorage.setItem('profile', JSON.stringify(state.profile));
-const saveSettings = ()=> localStorage.setItem('settings', JSON.stringify(state.settings));
+/* ========= helpers ========= */
+const uuid=()=>crypto.randomUUID?crypto.randomUUID():
+ 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>((c==='x'?Math.random()*16:Math.random()*16&0x3|0x8)|0).toString(16));
+const byId=id=>state.conversations.find(c=>c.id===id);
+const saveConvs=()=>localStorage.setItem('convs',JSON.stringify(state.conversations));
+const saveLib=()=>localStorage.setItem('library',JSON.stringify(state.library));
+const saveProfile=()=>localStorage.setItem('profile',JSON.stringify(state.profile));
+const saveSettings=()=>localStorage.setItem('settings',JSON.stringify(state.settings));
 function ensureConv(){
   if(!state.currentConvId){
-    const id = uuid();
-    state.conversations.unshift({id, title:"New Conversation", items:[]});
-    state.currentConvId = id; saveConvs();
+    const id=uuid(); state.conversations.unshift({id,title:"New Conversation",items:[]});
+    state.currentConvId=id; saveConvs();
   }
 }
-function escapeHtml(s){return (s||'').replace(/[&<>"']/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
+function escapeHtml(s){return (s||'').replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
 
-/* render */
+/* ========= render ========= */
 function renderSidebar(){
-  el.convList.innerHTML = state.conversations.map(c=>`
+  $('#convList').innerHTML=state.conversations.map(c=>`
     <div class="conv" data-id="${c.id}">
       <div class="title">${escapeHtml(c.title||'New Conversation')}</div>
       <div class="mini">
-        <div class="pill select">Select</div>
-        <div class="pill danger del">Del</div>
+        <div class="pill select">${t('Select')}</div>
+        <div class="pill danger del">${t('Del')}</div>
       </div>
     </div>`).join('');
 }
+function bubbleActions(){
+  return `<div class="actions">
+    <div class="action act-copy">${t('Copy')}</div>
+    <div class="action act-reply">${t('Reply')}</div>
+    <div class="action act-read">${t('Read')}</div>
+    <div class="action act-edit">${t('Edit')}</div>
+  </div>`;
+}
 function renderChat(){
-  const conv = byId(state.currentConvId);
-  el.chat.innerHTML = (conv?.items||[]).map(m=>{
-    const side = m.role==='ai' ? 'ai' : 'me';
-    const actions = `<div class="actions">
-      <div class="action copy">Copy</div>
-      ${side==='me' && m.type!=='file' ? '<div class="action edit">Edit</div>' : ''}
-      <div class="action read">Read</div>
-    </div>`;
+  const conv=byId(state.currentConvId);
+  $('#chat').innerHTML=(conv?.items||[]).map(m=>{
+    const side=m.role==='ai'?'ai':'me';
+    const acts=bubbleActions();
     if(m.type==='file'){
-      const isImg = m.mime?.startsWith('image/');
-      const isVid = m.mime?.startsWith('video/');
-      const thumb = isImg ? `<img src="${m.url}" class="thumb" alt="${escapeHtml(m.name)}">`
-                  : isVid ? `<video src="${m.url}" class="thumb" controls></video>`
-                  : `<div class="file-meta">File: ${escapeHtml(m.name)}</div>`;
+      const isImg=(m.mime||'').startsWith('image/');
+      const isVid=(m.mime||'').startsWith('video/');
+      const thumb=isImg?`<img src="${m.url}" class="thumb" alt="${escapeHtml(m.name)}">`
+                : isVid?`<video src="${m.url}" class="thumb" controls></video>`
+                : `<div class="file-meta">📄 ${escapeHtml(m.name)}</div>`;
       return `<div class="row-bubble ${side}">
         <div class="bubble ${side}">
-          ${actions}
+          ${acts}
           ${thumb}
-          <div class="file-meta">${escapeHtml(m.name)}</div>
           <div class="file-meta">
             <a href="${m.url}" target="_blank" rel="noopener">Open</a> ·
             <a href="${m.url}" download>Download</a>
@@ -416,218 +519,194 @@ function renderChat(){
     }
     return `<div class="row-bubble ${side}">
       <div class="bubble ${side}">
-        ${actions}
+        ${acts}
         ${escapeHtml(m.text)}
       </div>
     </div>`;
   }).join('');
-  el.chatWrap.scrollTop = el.chatWrap.scrollHeight;
+  // keep the newest visible
+  const wrap=$('#chatWrap');
+  wrap.scrollTop=wrap.scrollHeight;
 }
+
+/* ========= sending & echo ========= */
+function send(text){
+  ensureConv();
+  const conv=byId(state.currentConvId);
+  conv.items.push({role:'me',text}); saveConvs(); renderChat();
+  setTimeout(()=>{
+    conv.items.push({role:'ai',text:`${t('Echo')} ${text}`});
+    saveConvs(); renderChat();
+    if(isSpeaking) speak(conv.items.at(-1).text);
+  },220);
+}
+
+/* ========= events ========= */
+/* search/new/select/delete (with confirm) */
+$('#newConv').addEventListener('click',()=>{state.currentConvId=null;ensureConv();renderSidebar();renderChat()});
+$('#searchGo').addEventListener('click',()=>{
+  const q=($('#searchBox').value||'').toLowerCase();
+  const found=state.conversations.find(c=>(c.title||'new conversation').toLowerCase().includes(q));
+  if(found){state.currentConvId=found.id;renderSidebar();renderChat()}
+});
+$('#convList').addEventListener('click',(e)=>{
+  const row=e.target.closest('.conv'); if(!row)return;
+  const id=row.dataset.id;
+  if(e.target.classList.contains('del')){
+    if(confirm(t('DeleteConfirm'))){
+      const i=state.conversations.findIndex(c=>c.id===id);
+      if(i>-1){state.conversations.splice(i,1); if(state.currentConvId===id) state.currentConvId=null; ensureConv(); saveConvs(); renderSidebar(); renderChat()}
+    }
+  }else if(e.target.classList.contains('select')||e.target.classList.contains('title')){
+    state.currentConvId=id; renderSidebar(); renderChat();
+  }
+});
+
+/* composer */
+$('#send').addEventListener('click',()=>{const v=$('#msg').value.trim(); if(v){$('#msg').value=''; send(v)}})
+$('#msg').setAttribute('placeholder', tr[state.settings.lang||'English'].SearchPh.replace('Buscar conversaciones…','Type a message...').replace('会話を検索…','Type a message...'));
+$('#msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#send').click()}})
+
+/* bubble actions (Copy/Edit/Read/Reply) */
+$('#chat').addEventListener('click',async(e)=>{
+  const bubble=e.target.closest('.bubble'); if(!bubble) return;
+  const idx=[...document.querySelectorAll('.bubble')].indexOf(bubble);
+  const conv=byId(state.currentConvId); if(!conv) return;
+  const msg=conv.items[idx];
+
+  if(e.target.classList.contains('act-copy')){
+    const text=msg.type==='file'?msg.name:msg.text; try{await navigator.clipboard.writeText(text||'')}catch{}
+  }
+  if(e.target.classList.contains('act-edit') && msg && msg.type!=='file'){
+    const next=prompt(t('Edit'), msg.text||''); if(next!=null){ msg.text=next; saveConvs(); renderChat(); }
+  }
+  if(e.target.classList.contains('act-read')){
+    const ttxt=msg.type==='file'?msg.name:msg.text; speak(ttxt);
+  }
+  if(e.target.classList.contains('act-reply')){
+    const ttxt=msg.type==='file'?msg.name:msg.text; const box=$('#msg');
+    box.value = (box.value ? box.value+'\n' : '') + '> ' + ttxt + '\n'; box.focus();
+  }
+});
+
+/* attachments with previews + AI acknowledgement */
+$('#attach').addEventListener('click',()=>$('#fileInput').click());
+$('#fileInput').addEventListener('change',(e)=>{
+  const files=[...e.target.files]; if(!files.length) return; ensureConv();
+  const conv=byId(state.currentConvId); const names=[];
+  for(const f of files){
+    const url=URL.createObjectURL(f);
+    conv.items.push({role:'me',type:'file',url,name:f.name,mime:f.type}); names.push(f.name);
+    state.library.unshift({name:f.name,url,mime:f.type,ts:Date.now()});
+  }
+  saveConvs(); saveLib(); renderChat(); e.target.value="";
+  // AI reply acknowledging attachments
+  setTimeout(()=>{ conv.items.push({role:'ai',text:`${t('Echo')} ${names.join(', ')}`}); saveConvs(); renderChat(); if(isSpeaking) speak(conv.items.at(-1).text); },220);
+});
+
+/* library modal */
+$('#openLibrary').addEventListener('click',()=>{ renderLibrary(); $('#library-modal').style.display='flex' });
+$('#libraryClose').addEventListener('click',()=>$('#library-modal').style.display='none');
+$('#library-scrim').addEventListener('click',()=>$('#library-modal').style.display='none');
 function renderLibrary(){
-  el.libGrid.innerHTML = state.library.map(f=>{
-    const isImg = f.mime?.startsWith('image/');
-    const isVid = f.mime?.startsWith('video/');
-    const thumb = isImg ? `<img src="${f.url}" class="thumb" alt="${escapeHtml(f.name)}">`
-                : isVid ? `<video src="${f.url}" class="thumb" muted></video>`
-                : `<div class="thumb" style="display:grid;place-items:center;font-weight:700;color:#f2cf66;background:rgba(0,0,0,.35)">FILE</div>`;
-    const when = new Date(f.ts||Date.now()).toLocaleString();
+  $('#libraryGrid').innerHTML = state.library.map(f=>{
+    const isImg=(f.mime||'').startsWith('image/'); const isVid=(f.mime||'').startsWith('video/');
+    const thumb=isImg?`<img src="${f.url}" class="thumb" alt="${escapeHtml(f.name)}">`
+              : isVid?`<video src="${f.url}" class="thumb" muted></video>`
+              : `<div class="thumb" style="display:grid;place-items:center;font-weight:700;color:var(--gold);background:rgba(0,0,0,.35)">FILE</div>`;
+    const when=new Date(f.ts||Date.now()).toLocaleString();
     return `<div class="lib-item">
       ${thumb}
       <div style="margin-top:6px;font-weight:700">${escapeHtml(f.name)}</div>
       <div style="font-size:12px;opacity:.8">${when}</div>
       <div class="lib-actions">
-        <a class="btn secondary" href="${f.url}" target="_blank" rel="noopener">Open</a>
+        <a class="btn secondary" href="${f.url}" target="_blank" rel="noopener">${t('OpenLibrary')}</a>
         <a class="btn secondary" href="${f.url}" download>Download</a>
       </div>
     </div>`;
   }).join('') || `<div style="opacity:.75">Nothing shared yet.</div>`;
 }
 
-/* chat send + demo echo */
-function send(text){
-  ensureConv();
-  const conv = byId(state.currentConvId);
-  conv.items.push({role:'me', text});
-  saveConvs(); renderChat();
-  setTimeout(()=>{
-    conv.items.push({role:'ai', text:`Echoing intention: ${text}`});
-    saveConvs(); renderChat();
-    if(isSpeaking) speak(conv.items.at(-1).text);
-  }, 220);
-}
-
-/* attachments */
-$('#attach').addEventListener('click', ()=> el.fileInput.click());
-el.fileInput.addEventListener('change', async (e)=>{
-  const files = [...e.target.files];
-  if(!files.length) return;
-  ensureConv(); const conv = byId(state.currentConvId);
-  for(const f of files){
-    const url = URL.createObjectURL(f);
-    conv.items.push({role:'me', type:'file', url, name:f.name, mime:f.type});
-    state.library.unshift({name:f.name, url, mime:f.type, ts:Date.now()});
-  }
-  saveConvs(); saveLib(); renderChat();
-  e.target.value = ""; // reset
+/* settings overlay */
+$('#openSettings').addEventListener('click',openSettings);
+$('#settingsClose').addEventListener('click',closeSettings);
+$('#settings-overlay').addEventListener('click',closeSettings);
+$('#settingsNav').addEventListener('click',(e)=>{
+  const item=e.target.closest('.item'); if(!item) return;
+  [...$('#settingsNav').children].forEach(x=>x.classList.remove('active')); item.classList.add('active');
+  const pane=item.dataset.pane; Object.entries(el.panes).forEach(([k,v])=>v.hidden=(k!==pane));
 });
-
-/* composer interactions */
-$('#send').addEventListener('click', ()=>{
-  const t = el.msg.value.trim(); if(!t) return;
-  el.msg.value = ""; send(t);
+$('#saveAccount').addEventListener('click',()=>{
+  state.profile={name:$('#s_name').value,email:$('#s_email').value,phone:$('#s_phone').value}; saveProfile(); alert(t('Save'));
 });
-el.msg.addEventListener('keydown', e=>{
-  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); $('#send').click(); }
+$('#savePrefs').addEventListener('click',()=>{
+  state.settings.lang=$('#s_lang').value;
+  state.settings.spoken=$('#s_spoken').value;
+  state.settings.voice=$('#s_voice').value; saveSettings();
+  applyI18n(); renderSidebar(); renderChat(); alert(t('Save'));
 });
-
-/* bubble actions */
-el.chat.addEventListener('click', async (e)=>{
-  const bubble = e.target.closest('.bubble'); if(!bubble) return;
-  const allBubs = [...$$('.bubble')];
-  const idx = allBubs.indexOf(bubble);
-  const conv = byId(state.currentConvId); if(!conv) return;
-  const msg = conv.items[idx];
-
-  if(e.target.classList.contains('copy')){
-    const text = msg.type==='file' ? msg.name : msg.text;
-    try{ await navigator.clipboard.writeText(text||''); }catch{}
-  }
-  if(e.target.classList.contains('edit') && msg && msg.type!=='file'){
-    const next = prompt('Edit your message:', msg.text||'');
-    if(next!=null){ msg.text = next; saveConvs(); renderChat(); }
-  }
-  if(e.target.classList.contains('read')){
-    const t = msg.type==='file' ? msg.name : msg.text;
-    speak(t);
-  }
+$('#signOutBtn').addEventListener('click',()=>{ alert('Signed out (demo). Hook to your auth when ready.'); closeSettings(); });
+$('#deleteAccount').addEventListener('click',()=>{
+  if(confirm(t('DeleteConfirm')) && confirm(t('DeleteAccount')+'?')){ localStorage.clear(); location.reload(); }
 });
-
-/* sidebar actions */
-$('#newConv').addEventListener('click', ()=>{
-  state.currentConvId = null; ensureConv(); renderSidebar(); renderChat();
-});
-$('#searchGo').addEventListener('click', ()=>{
-  const q = ($('#searchBox').value||'').toLowerCase();
-  const found = state.conversations.find(c=> (c.title||'new conversation').toLowerCase().includes(q));
-  if(found){ state.currentConvId = found.id; renderSidebar(); renderChat(); }
-});
-el.convList.addEventListener('click', (e)=>{
-  const row = e.target.closest('.conv'); if(!row) return;
-  const id = row.dataset.id;
-  if(e.target.classList.contains('del')){
-    if(confirm('Delete this conversation? This cannot be undone.')){
-      const i = state.conversations.findIndex(c=>c.id===id);
-      if(i>-1){ state.conversations.splice(i,1); if(state.currentConvId===id) state.currentConvId=null; ensureConv(); saveConvs(); renderSidebar(); renderChat(); }
-    }
-  }else if(e.target.classList.contains('select') || e.target.classList.contains('title')){
-    state.currentConvId = id; renderSidebar(); renderChat();
-  }
-});
-
-/* library modal */
-$('#openLibrary').addEventListener('click', ()=>{ renderLibrary(); el.libModal.style.display='flex' });
-el.libClose.addEventListener('click', ()=> el.libModal.style.display='none');
-el.libScrim.addEventListener('click', ()=> el.libModal.style.display='none');
-
-/* settings */
-$('#openSettings').addEventListener('click', openSettings);
 function openSettings(){
   // populate
-  el.s_name.value = state.profile.name || '';
-  el.s_email.value = state.profile.email || '';
-  el.s_phone.value = state.profile.phone || '';
-  el.s_pass.value = '';
-  el.s_lang.value = state.settings.lang || 'English';
-  el.s_spoken.value = state.settings.spoken || 'Auto-detect';
-  el.s_voice.value = state.settings.voice || 'Cove';
-  document.getElementById('memList').innerHTML = (state.memories||[])
-    ?.map(m=>`<li>${escapeHtml(m)}</li>`).join('') || '<li style="opacity:.7">No memories yet</li>';
-  el.sOverlay.style.display='block'; el.settings.style.display='block';
+  $('#s_name').value=state.profile.name||''; $('#s_email').value=state.profile.email||''; $('#s_phone').value=state.profile.phone||''; $('#s_pass').value='';
+  $('#s_lang').value=state.settings.lang||'English'; $('#s_spoken').value=state.settings.spoken||'Auto'; $('#s_voice').value=state.settings.voice||'Orion';
+  $('#memList').innerHTML = (state.memories||[]).map(m=>`<li>${escapeHtml(m)}</li>`).join('') || '<li style="opacity:.7">No memories yet</li>';
+  $('#settings-overlay').style.display='block'; $('#settings').style.display='block';
 }
-function closeSettings(){ el.settings.style.display='none'; el.sOverlay.style.display='none' }
-el.settingsClose.addEventListener('click', closeSettings);
-el.sOverlay.addEventListener('click', closeSettings);
-el.settingsNav.addEventListener('click', (e)=>{
-  const item = e.target.closest('.item'); if(!item) return;
-  [...el.settingsNav.children].forEach(x=>x.classList.remove('active'));
-  item.classList.add('active');
-  const pane = item.dataset.pane;
-  Object.entries(el.pane).forEach(([k,v])=> v.hidden = (k!==pane));
-});
-$('#saveAccount').addEventListener('click', ()=>{
-  state.profile = { name:el.s_name.value, email:el.s_email.value, phone:el.s_phone.value };
-  saveProfile(); alert('Account saved.');
-});
-$('#savePrefs').addEventListener('click', ()=>{
-  state.settings.lang = el.s_lang.value;
-  state.settings.spoken = el.s_spoken.value;
-  state.settings.voice = el.s_voice.value;
-  saveSettings(); alert('Preferences saved.');
-});
-$('#saveConnectors').addEventListener('click', ()=>{
-  const ids = ['gmail','drive','docs','calendar','dropbox','box','notion'];
-  state.settings.connectors = Object.fromEntries(ids.map(id=>[id, document.getElementById('c_'+id).checked]));
-  saveSettings(); alert('Connectors saved (mock).');
-});
-$('#deleteAccount').addEventListener('click', ()=>{
-  if(confirm('Really delete account data on this device?') && confirm('This cannot be undone. Delete?')){
-    localStorage.clear(); location.reload();
-  }
-});
-$('#signOutBtn').addEventListener('click', ()=>{
-  alert('Sign out (placeholder). Your auth backend can clear session here.');
-  closeSettings();
-});
+function closeSettings(){ $('#settings').style.display='none'; $('#settings-overlay').style.display='none' }
 
 /* mobile drawer */
-$('#hamburger').addEventListener('click', ()=> el.sidebar.classList.toggle('open'));
-addEventListener('click', (e)=>{ if(innerWidth<=1024){ if(!e.target.closest('#sidebar') && !e.target.closest('#hamburger')) el.sidebar.classList.remove('open'); }});
+$('#hamburger').addEventListener('click',()=>$('#sidebar').classList.toggle('open'));
+addEventListener('click',(e)=>{ if(innerWidth<=1024){ if(!e.target.closest('#sidebar')&&!e.target.closest('#hamburger')) $('#sidebar').classList.remove('open'); }});
 
-/* speech – mic (dictation) & voice (read aloud) */
-let recog, recognizing = false;
+/* speech: mic (dictation) */
+let recog, recognizing=false;
+function langToCode(name){
+  return {English:'en-US','Español':'es-ES','Français':'fr-FR','Deutsch':'de-DE',
+          'Português':'pt-PT','Italiano':'it-IT','日本語':'ja-JP','한국어':'ko-KR','中文':'zh-CN','हिन्दी':'hi-IN'}[name] || 'en-US';
+}
 function setupRecog(){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR) return null;
-  const r = new SR(); r.lang = (state.settings.spoken||'en-US'); r.interimResults = true; r.continuous = true;
-  r.onresult = (event)=>{
-    let final=''; for(const res of event.results){ if(res.isFinal) final += res[0].transcript + ' '; }
-    if(final){ el.msg.value = (el.msg.value + ' ' + final).trim(); }
-  };
-  r.onerror = ()=>{}; r.onend = ()=>{ recognizing=false; el.mic.textContent='🎙️ Mic'; };
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR) return null;
+  const r=new SR(); r.lang=langToCode(state.settings.spoken||state.settings.lang||'English'); r.interimResults=true; r.continuous=true;
+  r.onresult=(ev)=>{ let final=''; for(const res of ev.results){ if(res.isFinal) final+=res[0].transcript+' '; }
+    if(final){ const box=$('#msg'); box.value=(box.value+' '+final).trim(); } };
+  r.onerror=()=>{}; r.onend=()=>{ recognizing=false; $('#mic').textContent='🎙️'; };
   return r;
 }
-el.mic.addEventListener('click', ()=>{
-  recog = recog || setupRecog();
+$('#mic').addEventListener('click',()=>{
+  recog=recog||setupRecog();
   if(!recog){ alert('Speech recognition not supported in this browser.'); return; }
-  if(!recognizing){ recognizing=true; el.mic.textContent='■ Stop'; recog.start(); }
-  else { recognizing=false; el.mic.textContent='🎙️ Mic'; try{recog.stop()}catch{} }
+  if(!recognizing){ recognizing=true; $('#mic').textContent='■'; recog.lang=langToCode(state.settings.spoken||state.settings.lang||'English'); try{recog.start()}catch{} }
+  else { recognizing=false; $('#mic').textContent='🎙️'; try{recog.stop()}catch{} }
 });
 
-let isSpeaking = false;
+/* speech: voice (read aloud) */
+let isSpeaking=false;
 function speak(text){
   if(!('speechSynthesis' in window)) { alert('Speech synthesis not supported.'); return; }
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text||'');
-  u.rate = 1.0; u.pitch = 1.0; u.onend = ()=>{ if(!isSpeaking) window.speechSynthesis.cancel(); };
+  const u=new SpeechSynthesisUtterance(text||'');
+  const lang=langToCode(state.settings.spoken||state.settings.lang||'English');
+  u.lang=lang; u.rate=1; u.pitch=1;
+  const voices=window.speechSynthesis.getVoices();
+  const match=voices.find(v=>v.lang===lang)||voices.find(v=>v.lang.startsWith(lang.split('-')[0]))||voices[0];
+  if(match) u.voice=match;
   window.speechSynthesis.speak(u);
 }
-el.voice.addEventListener('click', ()=>{
-  isSpeaking = !isSpeaking;
-  el.voice.textContent = isSpeaking ? 'Voice ▣' : 'Voice';
-  if(isSpeaking){
-    const conv = byId(state.currentConvId);
-    const lastAi = [...(conv?.items||[])].reverse().find(m=>m.role==='ai' && !m.type);
-    if(lastAi) speak(lastAi.text);
-  }else{
-    window.speechSynthesis.cancel();
-  }
+$('#voice').addEventListener('click',()=>{
+  isSpeaking=!isSpeaking; $('#voice').textContent=isSpeaking? t('Voice')+' ▣' : t('Voice');
+  if(isSpeaking){ const conv=byId(state.currentConvId); const last=(conv?.items||[]).slice().reverse().find(m=>m.role==='ai'&&!m.type); if(last) speak(last.text); }
+  else { window.speechSynthesis.cancel(); }
 });
 
 /* init */
 (function init(){
+  applyI18n();
   ensureConv(); renderSidebar(); renderChat();
 })();
 </script>
 </body>
 </html>
-
