@@ -1,609 +1,597 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Lucidian</title>
+<style>
+  :root{
+    --brand-gold:#f2cf66; --brand-gold-soft:rgba(242,207,102,.25);
+    --ink:#d9dde7; --bg-top:#0f1217; --bg-deep:#0a1017;
+    --bubble-user:rgba(60,64,72,.85); --bubble-ai:rgba(240,210,90,.15);
+    --symbol-size:74px; --header-h:84px; --sidebar-w:320px; --rad:14px;
+    --shadow:0 8px 30px rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:radial-gradient(1200px 800px at 50% 40%,#113049 0%,#0d2132 40%,var(--bg-deep) 100%);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica Neue,Arial}
+  body{overflow:hidden}
+  .hidden{display:none!important}
 
-/**
- * LUCIDIAN – single‑file React app you can drop into a Vite/Next project as <LucidianApp />
- *
- * What this file gives you (as requested):
- * - Header: wordmark centered, ROUND symbol on the RIGHT, Settings button on the TOP‑LEFT
- * - Sidebar: "New", "Library" (renamed from Open), conversation list, search
- * - Stars background
- * - Chat:
- *    • Bubbles auto-size to content
- *    • Edit a message -> all following messages are deleted (like ChatGPT)
- *    • Scrollable transcript + sticky "scroll to bottom" button
- * - Voice mic (Web Speech API): prevents duplicate lines by using final results only
- * - Voice call modal with animated circle (WebAudio analyser) that moves with voice
- * - Preferences: UI language switch (demo EN/ES) that actually changes labels
- * - Memories: add/view/delete memories (localStorage demo)
- * - Connectors: real URL fields (not just toggles)
- * - Danger Zone renamed to Delete Account
- * - Auth: login/register/logout screens that actually gate the app (localStorage demo)
- *
- * NOTE ABOUT "REAL" ACCOUNTS:
- *  This ships with a localStorage demo so you can test instantly. To turn on real auth,
- *  wire the three TODOs marked SUPABASE (or any provider) and set USE_DEMO_AUTH=false.
- */
+  .app{position:relative;height:100%;width:100%;display:grid;grid-template-rows:var(--header-h) 1fr auto}
 
-// ---------- CONFIG ----------
-const USE_DEMO_AUTH = true; // set to false and fill the SUPABASE TODOs for real accounts
+  /* header */
+  .header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,rgba(15,18,23,.95),rgba(15,18,23,.86));border-bottom:1px solid rgba(255,255,255,.06);display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:0 16px}
+  .settings-btn{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid rgba(255,255,255,.12);padding:8px 10px;border-radius:10px;cursor:pointer}
+  .brand{display:flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:.48rem;color:var(--brand-gold);font-size:32px;user-select:none}
+  .brand-symbol{width:var(--symbol-size);height:var(--symbol-size);min-width:var(--symbol-size);min-height:var(--symbol-size);border-radius:9999px;margin-left:10px;background:radial-gradient(circle at 50% 50%,rgba(242,207,102,.9),rgba(242,207,102,.35) 40%,rgba(242,207,102,.08) 68%,transparent 70%);box-shadow:0 0 18px rgba(242,207,102,.55), inset 0 0 18px rgba(242,207,102,.25)}
+  .brand-wrap{display:flex;align-items:center;justify-content:center}
 
-const LANG = {
-  en: {
-    new: "New",
-    library: "Library",
-    settings: "Settings",
-    searchConvos: "Search conversations…",
-    typeMsg: "Type a message…",
-    send: "Send",
-    voice: "Voice",
-    mic: "Mic",
-    account: "Account",
-    preferences: "Preferences",
-    memories: "Memories",
-    connectors: "Connectors",
-    deleteAccount: "Delete account",
-    signOut: "Sign out",
-    uiLanguage: "UI language",
-    spokenLanguage: "Spoken language",
-    voiceModel: "Voice",
-    save: "Save",
-    login: "Log in",
-    register: "Create account",
-    name: "Name",
-    email: "Email",
-    phone: "Phone",
-    password: "Password",
-    confirmPassword: "Confirm password",
-    addMemory: "Add memory",
-    noMemories: "No memories yet",
-    connectorsHelp: "Connect your apps by pasting links or OAuth in the future",
-    startCall: "Start voice call",
-    endCall: "End call",
-    edited: "(edited)",
-    edit: "Edit",
-    delete: "Del",
-    select: "Select",
-    go: "Go",
-  },
-  es: {
-    new: "Nuevo",
-    library: "Biblioteca",
-    settings: "Ajustes",
-    searchConvos: "Buscar conversaciones…",
-    typeMsg: "Escribe un mensaje…",
-    send: "Enviar",
-    voice: "Voz",
-    mic: "Micrófono",
-    account: "Cuenta",
-    preferences: "Preferencias",
-    memories: "Memorias",
-    connectors: "Conectores",
-    deleteAccount: "Eliminar cuenta",
-    signOut: "Cerrar sesión",
-    uiLanguage: "Idioma de la interfaz",
-    spokenLanguage: "Idioma hablado",
-    voiceModel: "Voz",
-    save: "Guardar",
-    login: "Iniciar sesión",
-    register: "Crear cuenta",
-    name: "Nombre",
-    email: "Correo",
-    phone: "Teléfono",
-    password: "Contraseña",
-    confirmPassword: "Confirmar contraseña",
-    addMemory: "Agregar memoria",
-    noMemories: "Aún no hay memorias",
-    connectorsHelp: "Conecta tus apps pegando enlaces u OAuth en el futuro",
-    startCall: "Iniciar llamada",
-    endCall: "Terminar llamada",
-    edited: "(editado)",
-    edit: "Editar",
-    delete: "Borrar",
-    select: "Elegir",
-    go: "Ir",
-  },
+  /* stars */
+  #stars{position:absolute;inset:0;z-index:0;pointer-events:none}
+
+  /* main row */
+  .main{position:relative;display:grid;grid-template-columns:var(--sidebar-w) 1fr;height:100%;z-index:1}
+
+  /* sidebar */
+  .sidebar{height:100%;overflow:hidden;border-right:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg,rgba(15,18,23,.86),rgba(15,18,23,.66));padding:12px}
+  .sidebar-scroll{height:100%;overflow:auto;padding-right:4px}
+  .section-label{font-size:12px;opacity:.75;margin:8px 4px}
+  .row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  .btn{background:linear-gradient(180deg,rgba(242,207,102,.95),rgba(242,207,102,.85));color:#2b2300;border:0;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.3)}
+  .btn.secondary{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid rgba(255,255,255,.12);font-weight:600}
+  .input{flex:1;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);color:var(--ink);padding:10px 12px;border-radius:12px}
+  .conv{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);margin-bottom:8px}
+  .conv .title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mini{display:flex;gap:6px}
+  .pill{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05);cursor:pointer}
+  .pill.danger{background:rgba(240,70,70,.18);border-color:rgba(240,70,70,.35);color:#ffdada}
+
+  /* chat */
+  .chat-wrap{position:relative;height:100%;overflow:auto;padding:18px 18px 110px}
+  .chat{max-width:1100px;margin:0 auto;position:relative}
+  .row-bubble{display:flex}
+  .row-bubble.me{justify-content:flex-end}
+  .row-bubble.ai{justify-content:flex-start}
+  .bubble{display:inline-block;max-width:70%;margin:10px 12px;padding:12px 14px;border-radius:14px;line-height:1.35;backdrop-filter:blur(3px);position:relative;word-break:break-word;white-space:pre-wrap}
+  .ai{background:var(--bubble-ai);border:1px solid var(--brand-gold-soft);color:var(--ink)}
+  .me{background:var(--bubble-user);border:1px solid rgba(255,255,255,.12);color:var(--ink)}
+  .actions{position:absolute;right:-6px;top:-32px;display:flex;gap:6px;opacity:0;pointer-events:none;transition:.12s}
+  .bubble:hover .actions{opacity:1;pointer-events:auto}
+  .action{font-size:12px;padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.45);cursor:pointer}
+
+  .composer{position:sticky;bottom:0;z-index:10;background:linear-gradient(180deg,rgba(15,18,23,0),rgba(15,18,23,.9));border-top:1px solid rgba(255,255,255,.06);padding:10px 14px}
+  .composer-row{max-width:1100px;margin:0 auto;display:flex;gap:8px}
+  .composer .btn,.composer .input{height:44px}
+
+  /* scroll to bottom pill */
+  #toBottom{position:fixed;right:22px;bottom:120px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);cursor:pointer;z-index:15;display:none}
+
+  /* settings (profile) panel */
+  #overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);z-index:1600;display:none}
+  #panel{position:fixed;top:82px;left:16px;width:min(420px,calc(100vw - 32px));max-height:min(80vh,900px);overflow:auto;padding:16px;border-radius:12px;background:rgba(20,20,22,.92);border:1px solid var(--brand-gold-soft);box-shadow:var(--shadow);z-index:1700;display:none}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .tab{padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);cursor:pointer}
+  .tab.act{background:rgba(242,207,102,.15);border-color:rgba(242,207,102,.35)}
+  .field{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+  .field input,.field select{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.14);color:var(--ink);padding:10px 12px;border-radius:10px}
+
+  /* library modal */
+  #libModal{position:fixed;inset:0;z-index:1500;display:none;align-items:center;justify-content:center}
+  #libScrim{position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)}
+  #libCard{position:relative;width:min(880px,92vw);max-height:min(70vh,800px);overflow:auto;padding:16px;border-radius:16px;background:rgba(18,19,23,.95);border:1px solid rgba(255,255,255,.12);box-shadow:var(--shadow)}
+  .lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .lib-item{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:12px;padding:10px}
+  .close-x{position:absolute;right:14px;top:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:6px 10px;cursor:pointer}
+
+  /* voice call */
+  #call{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:1800}
+  .call-card{background:#0d1324;border:1px solid rgba(255,255,255,.1);padding:24px;border-radius:18px;text-align:center}
+  #meterWrap{width:160px;height:160px;border-radius:9999px;margin:0 auto;background:radial-gradient(ellipse at center, rgba(102,153,255,.2), rgba(102,153,255,.05));display:grid;place-items:center}
+  #meter{width:110px;height:110px;border-radius:9999px;background:rgba(255,255,255,.2);transition:transform .08s linear}
+
+  /* auth screen */
+  #auth{min-height:100%;display:grid;place-items:center;padding:24px}
+  .card{width:min(460px,92vw);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px}
+
+  /* responsive */
+  @media (max-width:1024px){
+    .main{grid-template-columns:1fr}
+    .sidebar{position:fixed;z-index:1200;top:var(--header-h);left:0;height:calc(100% - var(--header-h));width:min(86vw,360px);transform:translateX(-110%);transition:transform .18s}
+    .sidebar.open{transform:translateX(0)}
+    .chat-wrap{padding:16px 12px 100px}
+    .bubble{max-width:86%}
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth">
+  <div class="card">
+    <h2 style="margin:6px 0 12px 0;text-align:center;color:var(--brand-gold)">L U C I D I A N</h2>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button id="modeLogin" class="tab act">Log in</button>
+      <button id="modeReg" class="tab">Create account</button>
+    </div>
+    <div class="field"><label>Email <input id="aEmail" type="email"></label></div>
+    <div class="field"><label>Password <input id="aPass" type="password"></label></div>
+    <div id="extraReg" class="hidden">
+      <div class="field"><label>Name <input id="aName" type="text"></label></div>
+      <div class="field"><label>Phone <input id="aPhone" type="tel"></label></div>
+      <div class="field"><label>Confirm password <input id="aPass2" type="password"></label></div>
+    </div>
+    <button id="authGo" class="btn" style="width:100%;margin-top:8px">Continue</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="app hidden">
+  <!-- Header -->
+  <div class="header">
+    <button id="settingsBtn" class="settings-btn">Settings</button>
+    <div class="brand-wrap"><div class="brand">L U C I D I A N</div></div>
+    <div class="brand-symbol" aria-hidden="true"></div>
+  </div>
+
+  <!-- Stars -->
+  <canvas id="stars"></canvas>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-scroll">
+        <div class="section-label" data-i18n="profile">Profile</div>
+        <div class="row">
+          <button id="newConv" class="btn" style="flex:1;" data-i18n="new">New</button>
+        </div>
+
+        <div class="row" style="margin-top:14px;">
+          <div class="section-label" style="margin:0" data-i18n="library">Library</div>
+          <button id="openLibrary" class="btn secondary" style="margin-left:auto;" data-i18n="libraryBtn">Library</button>
+        </div>
+
+        <div class="section-label" style="margin-top:14px;" data-i18n="search">Search</div>
+        <div class="row">
+          <input id="searchBox" class="input" placeholder="Search conversations..." data-i18n-ph="searchPH" />
+          <button id="searchGo" class="btn secondary" data-i18n="go">Go</button>
+        </div>
+
+        <div id="convList"></div>
+      </div>
+    </aside>
+
+    <!-- Chat -->
+    <div id="chatWrap" class="chat-wrap">
+      <div id="chat" class="chat"></div>
+    </div>
+  </div>
+
+  <!-- Composer -->
+  <div class="composer">
+    <div class="composer-row">
+      <button id="attach" class="btn secondary" data-i18n="attach">Attach</button>
+      <button id="mic" class="btn secondary" data-i18n="mic">🎙️ Mic</button>
+      <input id="msg" class="input" placeholder="Type a message..." data-i18n-ph="typePH" />
+      <button id="send" class="btn" data-i18n="send">Send</button>
+      <button id="voice" class="btn secondary" data-i18n="voice">Voice</button>
+    </div>
+  </div>
+</div>
+
+<!-- scroll-down pill -->
+<button id="toBottom">↓</button>
+
+<!-- Settings panel -->
+<div id="overlay"></div>
+<div id="panel">
+  <div class="tabs">
+    <button class="tab act" data-tab="acct" data-i18n="account">Account</button>
+    <button class="tab" data-tab="prefs" data-i18n="preferences">Preferences</button>
+    <button class="tab" data-tab="mems" data-i18n="memories">Memories</button>
+    <button class="tab" data-tab="conns" data-i18n="connectors">Connectors</button>
+    <button class="tab" data-tab="danger" data-i18n="deleteAccount">Delete account</button>
+    <button class="tab" id="signOut" data-i18n="signOut">Sign out</button>
+  </div>
+
+  <!-- Account -->
+  <div class="tabpane" id="p-acct">
+    <div class="field"><label>Name <input id="profName" type="text"></label></div>
+    <div class="field"><label>Email <input id="profEmail" type="email"></label></div>
+    <div class="field"><label>Phone <input id="profPhone" type="tel"></label></div>
+    <div class="field"><label>Password <input id="profPass" type="password" placeholder="••••••"></label></div>
+    <button id="profSave" class="btn" data-i18n="save">Save</button>
+  </div>
+
+  <!-- Preferences -->
+  <div class="tabpane hidden" id="p-prefs">
+    <div class="field">
+      <label>UI language
+        <select id="langSel">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
+      </label>
+    </div>
+    <div style="opacity:.75;font-size:13px">Changes labels instantly.</div>
+  </div>
+
+  <!-- Memories -->
+  <div class="tabpane hidden" id="p-mems">
+    <div class="row"><button id="addMem" class="btn" data-i18n="addMemory">Add memory</button></div>
+    <div id="memList"></div>
+  </div>
+
+  <!-- Connectors -->
+  <div class="tabpane hidden" id="p-conns">
+    <div class="field"><label>Gmail <input id="c-gmail" type="url" placeholder="https://mail.google.com/…"></label></div>
+    <div class="field"><label>Google Drive <input id="c-drive" type="url" placeholder="https://drive.google.com/…"></label></div>
+    <div class="field"><label>Google Docs <input id="c-docs" type="url"></label></div>
+    <div class="field"><label>Google Calendar <input id="c-cal" type="url"></label></div>
+    <div class="field"><label>Dropbox <input id="c-dropbox" type="url"></label></div>
+    <div class="field"><label>Box <input id="c-box" type="url"></label></div>
+    <div class="field"><label>Notion <input id="c-notion" type="url"></label></div>
+    <button id="saveConns" class="btn" data-i18n="save">Save</button>
+  </div>
+
+  <!-- Danger -->
+  <div class="tabpane hidden" id="p-danger">
+    <p>Removes your local data on this device (demo auth).</p>
+    <button id="deleteAcct" class="btn secondary" style="border-color:#f66;color:#ffdada">Delete account</button>
+  </div>
+</div>
+
+<!-- Library -->
+<div id="libModal">
+  <div id="libScrim"></div>
+  <div id="libCard">
+    <button id="libClose" class="close-x">Close</button>
+    <h3 style="margin:0 0 12px 0" data-i18n="sharedLib">Shared Library</h3>
+    <div id="libGrid" class="lib-grid"></div>
+  </div>
+</div>
+
+<!-- Voice call -->
+<div id="call">
+  <div class="call-card">
+    <div id="callLabel" style="margin-bottom:10px">Voice • Live</div>
+    <div id="meterWrap"><div id="meter"></div></div>
+    <div class="row" style="justify-content:center;margin-top:12px">
+      <button id="endCall" class="btn secondary">End call</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==================== i18n ==================== */
+const I18N = {
+  en:{profile:'Profile',new:'New',library:'Library',libraryBtn:'Library',search:'Search',searchPH:'Search conversations…',go:'Go',attach:'Attach',mic:'🎙️ Mic',typePH:'Type a message…',send:'Send',voice:'Voice',account:'Account',preferences:'Preferences',memories:'Memories',connectors:'Connectors',deleteAccount:'Delete account',signOut:'Sign out',save:'Save',addMemory:'Add memory',sharedLib:'Shared Library'},
+  es:{profile:'Perfil',new:'Nuevo',library:'Biblioteca',libraryBtn:'Biblioteca',search:'Buscar',searchPH:'Buscar conversaciones…',go:'Ir',attach:'Adjuntar',mic:'🎙️ Micrófono',typePH:'Escribe un mensaje…',send:'Enviar',voice:'Voz',account:'Cuenta',preferences:'Preferencias',memories:'Memorias',connectors:'Conectores',deleteAccount:'Eliminar cuenta',signOut:'Cerrar sesión',save:'Guardar',addMemory:'Agregar memoria',sharedLib:'Biblioteca compartida'}
+};
+let lang = localStorage.getItem('lang') || 'en';
+function applyI18n(){
+  const dict = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(n=>{ n.textContent = dict[n.dataset.i18n] || n.textContent; });
+  document.querySelectorAll('[data-i18n-ph]').forEach(n=>{ n.placeholder = dict[n.dataset.i18nPh] || n.placeholder; });
+}
+function setLang(v){ lang=v; localStorage.setItem('lang',v); applyI18n(); }
+
+/* ==================== auth (demo) ==================== */
+const $ = s=>document.querySelector(s);
+const auth = {
+  users: JSON.parse(localStorage.getItem('users')||'[]'),
+  get current(){ return JSON.parse(localStorage.getItem('currentUser')||'null'); },
+  set current(u){ if(u) localStorage.setItem('currentUser',JSON.stringify(u)); else localStorage.removeItem('currentUser'); },
+  login(email,pass){ const u=this.users.find(x=>x.email===email && x.pass===pass); if(!u) throw new Error('Invalid credentials'); this.current=u; },
+  register({name,email,phone,pass}){ if(this.users.some(x=>x.email===email)) throw new Error('Email in use'); const u={id:crypto.randomUUID(),name,email,phone,pass}; this.users.push(u); localStorage.setItem('users',JSON.stringify(this.users)); this.current=u; },
+  logout(){ this.current=null; }
 };
 
-// ---------- UTIL ----------
-const uid = () => Math.random().toString(36).slice(2, 9);
-const ls = {
-  get: (k, v) => {
-    try { return JSON.parse(localStorage.getItem(k) ?? "null") ?? v; } catch { return v; }
-  },
-  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
-  del: (k) => localStorage.removeItem(k),
+/* ==================== state ==================== */
+const state = {
+  get uid(){ return auth.current?.id || 'anon'; },
+  get key(){ return id => `${this.uid}:${id}`; },
+  get convs(){ return JSON.parse(localStorage.getItem(this.key('convs'))||'[]'); },
+  set convs(v){ localStorage.setItem(this.key('convs'),JSON.stringify(v)); },
+  get library(){ return JSON.parse(localStorage.getItem(this.key('lib'))||'[]'); },
+  set library(v){ localStorage.setItem(this.key('lib'),JSON.stringify(v)); },
+  get profile(){ return JSON.parse(localStorage.getItem(this.key('profile'))||'{}'); },
+  set profile(v){ localStorage.setItem(this.key('profile'),JSON.stringify(v)); },
+  get mems(){ return JSON.parse(localStorage.getItem(this.key('mems'))||'[]'); },
+  set mems(v){ localStorage.setItem(this.key('mems'),JSON.stringify(v)); },
+  get conns(){ return JSON.parse(localStorage.getItem(this.key('conns'))||'{}'); },
+  set conns(v){ localStorage.setItem(this.key('conns'),JSON.stringify(v)); },
+  currentConvId:null
 };
 
-// ---------- AUTH (demo) ----------
-function useAuth() {
-  const [user, setUser] = useState(() => ls.get("lucidian.user", null));
-
-  const login = async (email, password) => {
-    if (!USE_DEMO_AUTH) {
-      // TODO SUPABASE: call supabase.auth.signInWithPassword({ email, password })
-      return;
+/* ==================== stars ==================== */
+(function stars(){
+  const c = $('#stars'), ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize();
+  const density = (c.width*c.height)/8000; // more stars
+  const stars = Array.from({length:Math.round(density)}, ()=>({x:Math.random()*c.width,y:Math.random()*c.height,z:Math.random()*0.7+0.3,tw:Math.random()*0.7+0.3}));
+  function tick(){
+    ctx.clearRect(0,0,c.width,c.height);
+    for(const s of stars){
+      const size = s.z*1.5;
+      ctx.fillStyle = `rgba(255,255,255,${0.7*s.tw})`;
+      ctx.fillRect(s.x, s.y, size, size);
+      s.x += 0.025*s.z; if(s.x>c.width+2) s.x=-2;
+      s.tw += (Math.random()-.5)*0.02; s.tw=Math.min(1,Math.max(0.2,s.tw));
     }
-    const db = ls.get("lucidian.users", []);
-    const u = db.find((u) => u.email === email && u.password === password);
-    if (!u) throw new Error("Invalid credentials");
-    ls.set("lucidian.user", u);
-    setUser(u);
-  };
+    requestAnimationFrame(tick);
+  }
+  addEventListener('resize', resize); tick();
+})();
 
-  const register = async (payload) => {
-    if (!USE_DEMO_AUTH) {
-      // TODO SUPABASE: call supabase.auth.signUp(payload)
-      return;
+/* ==================== helpers ==================== */
+function saveConvs(v){ state.convs = v; }
+function convById(id){ return state.convs.find(c=>c.id===id); }
+function ensureConv(){
+  if(!state.currentConvId){
+    const id = crypto.randomUUID();
+    const all = state.convs;
+    all.unshift({id,title:"New Conversation",items:[]});
+    state.currentConvId = id; saveConvs(all);
+  }
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, ch=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[ch])); }
+
+/* ==================== render ==================== */
+const el = {
+  app: $('#app'), auth: $('#auth'),
+  chat: $('#chat'), chatWrap: $('#chatWrap'), msg: $('#msg'),
+  convList: $('#convList'), toBottom: $('#toBottom'),
+  settingsBtn: $('#settingsBtn'), overlay: $('#overlay'), panel: $('#panel'),
+  libModal: $('#libModal'), libGrid: $('#libGrid')
+};
+
+function renderSidebar(){
+  const list = state.convs.map(c=>`
+    <div class="conv" data-id="${c.id}">
+      <div class="title">${escapeHtml(c.title||'New Conversation')}</div>
+      <div class="mini">
+        <div class="pill select" data-i18n="select">Select</div>
+        <div class="pill danger del" data-i18n="del">Del</div>
+      </div>
+    </div>`).join('');
+  el.convList.innerHTML = list; applyI18n();
+}
+
+function renderChat(){
+  const conv = convById(state.currentConvId);
+  const html = (conv?.items||[]).map(m=>{
+    const side = m.role==='ai' ? 'ai':'me';
+    const actions = `<div class="actions">
+      <div class="action copy">Copy</div>
+      ${side==='me' && m.type!=='file' ? '<div class="action edit">Edit</div>' : ''}
+      <div class="action read">Read</div>
+    </div>`;
+    if(m.type==='file'){
+      return `<div class="row-bubble ${side}"><div class="bubble ${side}">${actions}
+        <div><strong>${escapeHtml(m.name)}</strong></div>
+        <div style="margin-top:6px;"><a href="${m.url}" download>Download</a></div>
+      </div></div>`;
     }
-    const db = ls.get("lucidian.users", []);
-    if (db.some((u) => u.email === payload.email)) throw new Error("Email in use");
-    const u = { id: uid(), ...payload };
-    db.push(u);
-    ls.set("lucidian.users", db);
-    ls.set("lucidian.user", u);
-    setUser(u);
-  };
+    return `<div class="row-bubble ${side}"><div class="bubble ${side}">${actions}${escapeHtml(m.text)}</div></div>`;
+  }).join('');
+  el.chat.innerHTML = html;
+  maybeStickToBottom(true);
+}
 
-  const logout = async () => {
-    if (!USE_DEMO_AUTH) {
-      // TODO SUPABASE: supabase.auth.signOut()
+function renderLibrary(){
+  el.libGrid.innerHTML = state.library.map(f=>{
+    const d = new Date(f.ts||Date.now()).toLocaleString();
+    return `<div class="lib-item">
+      <div style="font-size:13px;opacity:.8;">${d}</div>
+      <div style="margin:6px 0;font-weight:700;">${escapeHtml(f.name)}</div>
+      <a href="${f.url}" download>Download</a>
+    </div>`;
+  }).join('') || `<div style="opacity:.7;">Nothing shared yet.</div>`;
+}
+
+/* ==================== chat logic ==================== */
+function send(text){
+  ensureConv();
+  const all = state.convs; const conv = convById(state.currentConvId);
+  conv.items.push({role:'me',text}); saveConvs(all); renderChat();
+  // demo echo
+  setTimeout(()=>{ conv.items.push({role:'ai',text:`Echoing intention: ${text}`}); saveConvs(all); renderChat(); },150);
+}
+
+function attachDummy(){
+  ensureConv();
+  const all = state.convs; const conv = convById(state.currentConvId);
+  const blob = new Blob([new TextEncoder().encode('lucidian demo file')], {type:'text/plain'});
+  const url = URL.createObjectURL(blob); const name = 'index.html';
+  conv.items.push({role:'me',type:'file',url,name});
+  const lib = state.library; lib.unshift({name,url,ts:Date.now()}); state.library = lib;
+  saveConvs(all); renderChat();
+}
+
+/* edit → trim tail behavior */
+function editMessageAt(index,newText){
+  const all = state.convs; const conv = convById(state.currentConvId); if(!conv) return;
+  // compute array of message indexes excluding system if needed
+  const msgIdx = index;
+  if(msgIdx<0 || msgIdx>=conv.items.length) return;
+  conv.items[msgIdx].text = newText;
+  conv.items = conv.items.slice(0, msgIdx+1); // trim everything after
+  saveConvs(all); renderChat();
+}
+
+/* scroll helpers */
+function nearBottom(){ return el.chatWrap.scrollTop + el.chatWrap.clientHeight >= el.chatWrap.scrollHeight - 120; }
+function maybeStickToBottom(force=false){
+  if(force || nearBottom()){ el.chatWrap.scrollTop = el.chatWrap.scrollHeight; el.toBottom.style.display='none'; }
+  else el.toBottom.style.display='block';
+}
+el.chatWrap.addEventListener('scroll', ()=> maybeStickToBottom(false));
+
+/* mic – final only, stop after first result */
+$('#mic').addEventListener('click', ()=>{
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ alert('SpeechRecognition not supported'); return; }
+  const r = new SR(); r.lang = (lang==='es' ? 'es-ES':'en-US'); r.interimResults = false; r.maxAlternatives = 1;
+  r.onresult = e => { const t = e.results[0][0].transcript; send(t); r.stop(); };
+  r.onerror = e => console.error(e); r.start();
+});
+
+/* voice call modal with analyser */
+let mediaStream=null, raf=0, audioCtx=null, analyser=null, data=null;
+$('#voice').addEventListener('click', async()=>{
+  $('#call').style.display='flex';
+  try{
+    mediaStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser(); analyser.fftSize = 256;
+    const src = audioCtx.createMediaStreamSource(mediaStream); src.connect(analyser);
+    data = new Uint8Array(analyser.frequencyBinCount);
+    const meter = $('#meter');
+    const step = ()=>{ analyser.getByteFrequencyData(data); const v = data.reduce((a,b)=>a+b,0)/(data.length*255); meter.style.transform=`scale(${1 + v*1.8})`; raf=requestAnimationFrame(step); };
+    step();
+  }catch(e){ console.error(e); }
+});
+$('#endCall').addEventListener('click', ()=>{
+  cancelAnimationFrame(raf); if(mediaStream) mediaStream.getTracks().forEach(t=>t.stop());
+  if(audioCtx) audioCtx.close(); $('#call').style.display='none';
+});
+
+/* events */
+$('#send').addEventListener('click', ()=>{ const t = el.msg.value.trim(); if(!t) return; el.msg.value=''; send(t); });
+el.msg.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); $('#send').click(); }});
+$('#attach').addEventListener('click', attachDummy);
+$('#toBottom').addEventListener('click', ()=> maybeStickToBottom(true));
+
+$('#newConv').addEventListener('click', ()=>{ state.currentConvId=null; ensureConv(); renderSidebar(); renderChat(); });
+$('#searchGo').addEventListener('click', ()=>{ const q = ($('#searchBox').value||'').toLowerCase(); const match = state.convs.find(c=> (c.title||'new conversation').toLowerCase().includes(q)); if(match){ state.currentConvId=match.id; renderSidebar(); renderChat(); }});
+$('#convList').addEventListener('click', e=>{
+  const row = e.target.closest('.conv'); if(!row) return; const id = row.dataset.id;
+  if(e.target.classList.contains('del')){ const all = state.convs.filter(c=>c.id!==id); state.convs = all; if(state.currentConvId===id) state.currentConvId=null; ensureConv(); renderSidebar(); renderChat(); }
+  else if(e.target.classList.contains('select') || e.target.classList.contains('title')){ state.currentConvId=id; renderSidebar(); renderChat(); }
+});
+
+/* bubble actions */
+$('#chat').addEventListener('click', async e=>{
+  const bubble = e.target.closest('.bubble'); if(!bubble) return;
+  const idx = [...$('#chat').querySelectorAll('.bubble')].indexOf(bubble);
+  const conv = convById(state.currentConvId); if(!conv) return;
+  const msg = conv.items[idx];
+
+  if(e.target.classList.contains('copy')){ const text = msg.type==='file' ? msg.name : msg.text; await navigator.clipboard.writeText(text||''); }
+  if(e.target.classList.contains('edit') && msg && msg.type!=='file'){ const nt = prompt('Edit your message:', msg.text||''); if(nt!=null) editMessageAt(idx, nt); }
+  if(e.target.classList.contains('read')){ const t = msg.type==='file' ? msg.name : msg.text; if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance(t||''); speechSynthesis.cancel(); speechSynthesis.speak(u); } }
+});
+
+/* library modal */
+$('#openLibrary').addEventListener('click', ()=>{ renderLibrary(); $('#libModal').style.display='flex'; });
+$('#libClose').addEventListener('click', ()=> $('#libModal').style.display='none');
+$('#libScrim').addEventListener('click', ()=> $('#libModal').style.display='none');
+
+/* settings panel */
+function openPanel(){ $('#overlay').style.display='block'; $('#panel').style.display='block'; }
+function closePanel(){ $('#overlay').style.display='none'; $('#panel').style.display='none'; }
+$('#settingsBtn').addEventListener('click', e=>{ e.stopPropagation(); openPanel(); });
+$('#overlay').addEventListener('click', closePanel);
+
+/* tabs */
+document.querySelectorAll('#panel .tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    if(t.id==='signOut'){ doLogout(); return; }
+    document.querySelectorAll('#panel .tab').forEach(x=>x.classList.remove('act'));
+    t.classList.add('act');
+    const k = t.dataset.tab;
+    document.querySelectorAll('.tabpane').forEach(p=>p.classList.add('hidden'));
+    $('#p-'+k).classList.remove('hidden');
+  });
+});
+
+/* account save */
+$('#profSave').addEventListener('click', ()=>{
+  const p = { name: $('#profName').value, email: $('#profEmail').value, phone: $('#profPhone').value };
+  state.profile = p; alert('Saved'); closePanel();
+});
+
+/* language switch */
+$('#langSel').addEventListener('change', e=> setLang(e.target.value));
+
+/* memories */
+function renderMems(){
+  const box = $('#memList');
+  box.innerHTML = state.mems.map(m=>`<div class="conv"><div class="title">${escapeHtml(m.text)}</div><div class="mini"><div class="pill danger del" data-id="${m.id}">Del</div></div></div>`).join('') || '<div style="opacity:.7">No memories yet.</div>';
+}
+$('#addMem').addEventListener('click', ()=>{
+  const t = prompt('Memory text'); if(!t) return;
+  const next = [{id:crypto.randomUUID(), text:t, ts:Date.now()}, ...state.mems];
+  state.mems = next; renderMems();
+});
+$('#memList').addEventListener('click', e=>{
+  if(e.target.classList.contains('del')){ const id=e.target.dataset.id; state.mems = state.mems.filter(m=>m.id!==id); renderMems(); }
+});
+
+/* connectors */
+function loadConns(){
+  const c = state.conns||{}; ['gmail','drive','docs','cal','dropbox','box','notion'].forEach(k=>{ const el=document.getElementById('c-'+(k==='cal'?'cal':k)); if(el) el.value=c[k]||''; });
+}
+$('#saveConns').addEventListener('click', ()=>{
+  const c = {
+    gmail: $('#c-gmail').value, drive: $('#c-drive').value, docs: $('#c-docs').value,
+    cal: $('#c-cal').value, dropbox: $('#c-dropbox').value, box: $('#c-box').value, notion: $('#c-notion').value
+  };
+  state.conns = c; alert('Saved');
+});
+
+/* delete account */
+$('#deleteAcct').addEventListener('click', ()=>{
+  if(!confirm('Delete account and local data?')) return;
+  // remove all namespaced keys for this user
+  ['convs','lib','profile','mems','conns'].forEach(k=>localStorage.removeItem(`${state.uid}:${k}`));
+  // remove user from list and logout
+  const u = auth.users.filter(x=>x.id!==state.uid); localStorage.setItem('users',JSON.stringify(u));
+  doLogout(true);
+});
+
+/* ==================== AUTH UI ==================== */
+function showApp(){ $('#auth').classList.add('hidden'); $('#app').classList.remove('hidden'); initAfterLogin(); }
+function showAuth(){ $('#app').classList.add('hidden'); $('#auth').classList.remove('hidden'); }
+
+function doLogout(skipAlert=false){ auth.logout(); if(!skipAlert) alert('Signed out.'); showAuth(); }
+
+const modeLogin = $('#modeLogin'), modeReg = $('#modeReg'), extraReg = $('#extraReg');
+modeLogin.addEventListener('click', ()=>{ modeLogin.classList.add('act'); modeReg.classList.remove('act'); extraReg.classList.add('hidden'); });
+modeReg.addEventListener('click', ()=>{ modeReg.classList.add('act'); modeLogin.classList.remove('act'); extraReg.classList.remove('hidden'); });
+
+$('#authGo').addEventListener('click', ()=>{
+  try{
+    const email = $('#aEmail').value.trim(), pass = $('#aPass').value;
+    if(modeReg.classList.contains('act')){
+      const pass2 = $('#aPass2').value, name = $('#aName').value, phone = $('#aPhone').value;
+      if(pass!==pass2) throw new Error('Passwords do not match');
+      auth.register({name,email,phone,pass});
+    }else{
+      auth.login(email,pass);
     }
-    ls.del("lucidian.user");
-    setUser(null);
-  };
+    showApp();
+  }catch(e){ alert(e.message); }
+});
 
-  const deleteAccount = () => {
-    if (!user) return;
-    const db = ls.get("lucidian.users", []);
-    const rest = db.filter((u) => u.id !== user.id);
-    ls.set("lucidian.users", rest);
-    ["lucidian.mems", "lucidian.conns", "lucidian.convos"].forEach(ls.del);
-    logout();
-  };
-
-  return { user, login, register, logout, deleteAccount };
+/* ==================== init after login ==================== */
+function initAfterLogin(){
+  // profile into settings
+  const p = state.profile||{}; $('#profName').value=p.name||''; $('#profEmail').value=p.email||auth.current?.email||''; $('#profPhone').value=p.phone||'';
+  // conversations
+  ensureConv(); renderSidebar(); renderChat();
+  // language
+  $('#langSel').value = lang; applyI18n();
+  // memories/connectors
+  renderMems(); loadConns();
 }
 
-// ---------- STARFIELD BG ----------
-function Starfield() {
-  const ref = useRef(null);
-  useEffect(() => {
-    const c = ref.current; if (!c) return; const ctx = c.getContext("2d");
-    let w = (c.width = c.offsetWidth), h = (c.height = c.offsetHeight);
-    const stars = Array.from({ length: 180 }, () => ({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      r: Math.random() * 1.1 + 0.2,
-      a: Math.random() * 0.6 + 0.4,
-      v: Math.random() * 0.4 + 0.2,
-    }));
-    let raf = 0;
-    const draw = () => {
-      ctx.clearRect(0, 0, w, h);
-      stars.forEach((s) => {
-        s.a += (Math.random() - 0.5) * 0.02; s.a = Math.max(0.1, Math.min(1, s.a));
-        ctx.globalAlpha = s.a; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fillStyle = "#9fb7ff"; ctx.fill();
-      });
-      raf = requestAnimationFrame(draw);
-    };
-    draw();
-    const onResize = () => { w = c.width = c.offsetWidth; h = c.height = c.offsetHeight; };
-    window.addEventListener("resize", onResize);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); };
-  }, []);
-  return (
-    <div className="absolute inset-0 -z-10">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0b0f1a] to-[#04060b]" />
-      <canvas ref={ref} className="w-full h-full block" />
-    </div>
-  );
-}
-
-// ---------- VOICE CALL MODAL ----------
-function VoiceCall({ open, onClose, labels }) {
-  const circle = useRef(null);
-  const streamRef = useRef(null);
-  const anim = useRef(0);
-
-  useEffect(() => {
-    if (!open) return;
-    let audioCtx, analyser, source;
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-      streamRef.current = stream;
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-      source = audioCtx.createMediaStreamSource(stream);
-      source.connect(analyser);
-      const step = () => {
-        analyser.getByteFrequencyData(dataArray);
-        const vol = dataArray.reduce((a, b) => a + b, 0) / (bufferLength * 255);
-        if (circle.current) circle.current.style.transform = `scale(${1 + vol * 1.8})`;
-        anim.current = requestAnimationFrame(step);
-      };
-      step();
-    });
-    return () => {
-      cancelAnimationFrame(anim.current);
-      if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
-    };
-  }, [open]);
-
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6">
-      <div className="bg-[#0d1324] border border-white/10 rounded-3xl shadow-2xl p-8 w-full max-w-md text-center relative">
-        <div className="text-gray-300 mb-6">{labels.voice} • Live</div>
-        <div className="mx-auto w-40 h-40 rounded-full bg-gradient-to-br from-indigo-500/30 to-cyan-400/30 grid place-items-center">
-          <div ref={circle} className="w-28 h-28 rounded-full bg-white/20 transition-transform" />
-        </div>
-        <button onClick={onClose} className="mt-8 px-5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white">
-          {labels.endCall}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ---------- SETTINGS MODAL ----------
-function Settings({ open, onClose, user, setUser, lang, setLang, labels, onDeleteAccount }) {
-  const [tab, setTab] = useState("account");
-  const [form, setForm] = useState(user || {});
-  const [mems, setMems] = useState(() => ls.get("lucidian.mems", []));
-  const [conns, setConns] = useState(() => ls.get("lucidian.conns", { gmail: "", drive: "", docs: "", calendar: "", dropbox: "", box: "", notion: "" }));
-
-  useEffect(() => setForm(user || {}), [user]);
-
-  const saveAccount = () => { const merged = { ...user, ...form }; setUser(merged); ls.set("lucidian.user", merged); };
-  const savePrefs = () => { /* lang handled by setLang */ };
-  const saveConns = () => { ls.set("lucidian.conns", conns); };
-
-  const addMemory = () => {
-    const text = prompt("Memory text");
-    if (!text) return; const m = { id: uid(), text, ts: Date.now() };
-    const next = [m, ...mems]; setMems(next); ls.set("lucidian.mems", next);
-  };
-  const delMemory = (id) => { const next = mems.filter((m) => m.id !== id); setMems(next); ls.set("lucidian.mems", next); };
-
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center p-6">
-      <div className="bg-[#0d1324] border border-white/10 rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden">
-        <div className="flex">
-          <div className="w-56 border-r border-white/10 p-4 space-y-2">
-            <SideTab active={tab === "account"} onClick={() => setTab("account")}>
-              {labels.account}
-            </SideTab>
-            <SideTab active={tab === "preferences"} onClick={() => setTab("preferences")}>
-              {labels.preferences}
-            </SideTab>
-            <SideTab active={tab === "memories"} onClick={() => setTab("memories")}>
-              {labels.memories}
-            </SideTab>
-            <SideTab active={tab === "connectors"} onClick={() => setTab("connectors")}>
-              {labels.connectors}
-            </SideTab>
-            <SideTab active={tab === "danger"} onClick={() => setTab("danger")}>
-              {labels.deleteAccount}
-            </SideTab>
-            <button onClick={onClose} className="mt-4 w-full text-left text-white/60 hover:text-white">Close</button>
-          </div>
-          <div className="flex-1 p-6">
-            {tab === "account" && (
-              <div className="space-y-3">
-                <LabeledInput label={labels.name} value={form.name || ""} onChange={(v) => setForm({ ...form, name: v })} />
-                <LabeledInput label={labels.email} value={form.email || ""} onChange={(v) => setForm({ ...form, email: v })} />
-                <LabeledInput label={labels.phone} value={form.phone || ""} onChange={(v) => setForm({ ...form, phone: v })} />
-                <LabeledInput label={labels.password} type="password" value={form.password || ""} onChange={(v) => setForm({ ...form, password: v })} />
-                <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20" onClick={saveAccount}>{labels.save}</button>
-              </div>
-            )}
-            {tab === "preferences" && (
-              <div className="space-y-3">
-                <div className="text-white/80">{labels.uiLanguage}</div>
-                <select className="bg-white/10 rounded-xl p-2" value={lang} onChange={(e) => setLang(e.target.value)}>
-                  <option value="en">English</option>
-                  <option value="es">Español</option>
-                </select>
-                <div className="text-white/50 text-sm">(Demo: switches interface labels immediately)</div>
-              </div>
-            )}
-            {tab === "memories" && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-white/80">{labels.memories}</div>
-                  <button className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20" onClick={addMemory}>{labels.addMemory}</button>
-                </div>
-                {mems.length === 0 && <div className="text-white/40">{labels.noMemories}</div>}
-                <div className="space-y-2 max-h-72 overflow-auto pr-2">
-                  {mems.map((m) => (
-                    <div key={m.id} className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
-                      <div className="text-white/80 flex-1">{m.text}</div>
-                      <button onClick={() => delMemory(m.id)} className="text-red-300 hover:text-red-200">{labels.delete}</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {tab === "connectors" && (
-              <div className="space-y-3">
-                <p className="text-white/60 text-sm">{labels.connectorsHelp}</p>
-                {Object.entries(conns).map(([k, v]) => (
-                  <LabeledInput key={k} label={k} value={v} onChange={(val) => setConns({ ...conns, [k]: val })} />
-                ))}
-                <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20" onClick={saveConns}>{labels.save}</button>
-              </div>
-            )}
-            {tab === "danger" && (
-              <div className="space-y-4">
-                <p className="text-white/70">This will remove your local data on this device (demo).</p>
-                <button className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white" onClick={onDeleteAccount}>{labels.deleteAccount}</button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SideTab({ children, active, onClick }) {
-  return (
-    <button onClick={onClick} className={`w-full text-left px-3 py-2 rounded-lg ${active ? "bg-white/15 text-white" : "text-white/70 hover:text-white hover:bg-white/5"}`}>
-      {children}
-    </button>
-  );
-}
-
-function LabeledInput({ label, value, onChange, type = "text" }) {
-  return (
-    <label className="block">
-      <div className="text-white/70 mb-1 capitalize">{label}</div>
-      <input value={value} onChange={(e) => onChange(e.target.value)} type={type} className="w-full bg-white/10 rounded-xl px-3 py-2 text-white outline-none focus:ring-2 focus:ring-indigo-400" />
-    </label>
-  );
-}
-
-// ---------- CHAT ----------
-function Chat({ labels, language }) {
-  const listRef = useRef(null);
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState(() => ls.get("lucidian.convos", []));
-  const [editingId, setEditingId] = useState(null);
-  const [atBottom, setAtBottom] = useState(true);
-  const [callOpen, setCallOpen] = useState(false);
-
-  // persist
-  useEffect(() => { ls.set("lucidian.convos", messages); }, [messages]);
-
-  // autoscroll when at bottom
-  useEffect(() => {
-    const el = listRef.current; if (!el) return;
-    if (atBottom) el.scrollTop = el.scrollHeight;
-  }, [messages, atBottom]);
-
-  const onScroll = () => {
-    const el = listRef.current; if (!el) return;
-    setAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 20);
-  };
-
-  const send = (text) => {
-    if (!text.trim()) return;
-    if (editingId) {
-      // Replace message by id, and DELETE anything after that id
-      const idx = messages.findIndex((m) => m.id === editingId);
-      if (idx !== -1) {
-        const edited = { ...messages[idx], text, edited: true };
-        setMessages([...messages.slice(0, idx), edited]);
-      }
-      setEditingId(null);
-    } else {
-      setMessages([...messages, { id: uid(), role: "user", text }]);
-    }
-    setInput("");
-  };
-
-  // Mic input – final results only (prevents duplicates)
-  const recRef = useRef(null);
-  const startMic = () => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert("SpeechRecognition not supported in this browser"); return; }
-    const r = new SR();
-    r.lang = language === "es" ? "es-ES" : "en-US";
-    r.interimResults = false; // crucial to avoid duplicates
-    r.maxAlternatives = 1;
-    r.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
-      send(transcript);
-    };
-    r.onerror = (e) => console.error(e);
-    r.onend = () => { recRef.current = null; };
-    recRef.current = r; r.start();
-  };
-
-  const Bubble = ({ m }) => (
-    <div className={`max-w-[80%] w-fit ${m.role === "user" ? "self-end" : "self-start"}`}>
-      <div className={`rounded-2xl px-4 py-3 shadow ${m.role === "user" ? "bg-white/10" : "bg-emerald-900/30 border border-emerald-400/20"}`}>
-        <div className="whitespace-pre-wrap break-words text-white/90 leading-relaxed">{m.text}</div>
-        {m.edited && <div className="text-xs text-white/40 mt-1">{labels.edited}</div>}
-      </div>
-      <div className="flex gap-2 text-[12px] text-white/40 mt-1">
-        <button onClick={() => { setEditingId(m.id); setInput(m.text); }} className="hover:text-white">{labels.edit}</button>
-        <button onClick={() => setMessages(messages.filter((x) => x.id !== m.id))} className="hover:text-white">{labels.delete}</button>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="relative h-full">
-      <div ref={listRef} onScroll={onScroll} className="absolute inset-0 overflow-y-auto px-6 pb-28 pt-6 space-y-6 flex flex-col">
-        {messages.map((m) => <Bubble key={m.id} m={m} />)}
-      </div>
-
-      {!atBottom && (
-        <button onClick={() => { const el = listRef.current; if (el) el.scrollTop = el.scrollHeight; }} className="absolute bottom-28 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-white/10 text-white/80">↓</button>
-      )}
-
-      <div className="absolute bottom-0 inset-x-0 p-4">
-        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-2xl p-2">
-          <button onClick={startMic} className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/90">{labels.mic}</button>
-          <input className="flex-1 bg-transparent outline-none text-white px-2" placeholder={labels.typeMsg} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }} />
-          <button onClick={() => send(input)} className="px-4 py-2 rounded-xl bg-yellow-400 text-black font-medium hover:bg-yellow-300">{labels.send}</button>
-          <button onClick={() => setCallOpen(true)} className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/90">{labels.voice}</button>
-        </div>
-      </div>
-
-      <VoiceCall open={callOpen} onClose={() => setCallOpen(false)} labels={labels} />
-    </div>
-  );
-}
-
-// ---------- LOGIN / REGISTER ----------
-function AuthScreen({ labels, onLogin, onRegister }) {
-  const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", confirm: "" });
-  const submit = async () => {
-    try {
-      if (mode === "login") await onLogin(form.email, form.password);
-      else {
-        if (form.password !== form.confirm) throw new Error("Passwords do not match");
-        await onRegister({ name: form.name, email: form.email, phone: form.phone, password: form.password });
-      }
-    } catch (e) { alert(e.message); }
-  };
-  return (
-    <div className="min-h-screen relative text-white">
-      <Starfield />
-      <header className="flex items-center justify-center py-10">
-        <Wordmark />
-      </header>
-      <div className="max-w-md mx-auto p-6 bg-white/5 border border-white/10 rounded-3xl">
-        <div className="flex gap-2 mb-4">
-          <button onClick={() => setMode("login")} className={`px-3 py-1.5 rounded-xl ${mode === "login" ? "bg-white/15" : "bg-transparent hover:bg-white/10"}`}>{labels.login}</button>
-          <button onClick={() => setMode("register")} className={`px-3 py-1.5 rounded-xl ${mode === "register" ? "bg-white/15" : "bg-transparent hover:bg-white/10"}`}>{labels.register}</button>
-        </div>
-        {mode === "register" && <LabeledInput label={labels.name} value={form.name} onChange={(v) => setForm({ ...form, name: v })} />}
-        <div className="grid gap-3 mt-3">
-          <LabeledInput label={labels.email} value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-          {mode === "register" && <LabeledInput label={labels.phone} value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />}
-          <LabeledInput label={labels.password} type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
-          {mode === "register" && <LabeledInput label={labels.confirmPassword} type="password" value={form.confirm} onChange={(v) => setForm({ ...form, confirm: v })} />}
-        </div>
-        <button onClick={submit} className="mt-4 w-full px-4 py-2 rounded-xl bg-yellow-400 text-black font-medium hover:bg-yellow-300">{mode === "login" ? labels.login : labels.register}</button>
-      </div>
-    </div>
-  );
-}
-
-// ---------- HEADER ----------
-function Wordmark() {
-  return (
-    <div className="w-full grid grid-cols-[1fr_auto_1fr] items-center px-6">
-      {/* Settings on far left – as requested */}
-      <div className="justify-self-start">
-        <span className="px-3 py-1 rounded-lg bg-white/10 text-white/80">Settings</span>
-      </div>
-      {/* LUCIDIAN centered */}
-      <div className="justify-self-center text-3xl tracking-[0.6em] text-yellow-300 font-semibold select-none">L U C I D I A N</div>
-      {/* ROUND symbol on RIGHT */}
-      <div className="justify-self-end">
-        <LogoOrb />
-      </div>
-    </div>
-  );
-}
-
-function LogoOrb() {
-  return (
-    <div className="w-10 h-10 rounded-full bg-yellow-300/20 border border-yellow-300/60 grid place-items-center shadow-inner">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <circle cx="11" cy="11" r="9" stroke="#f8e16a" strokeWidth="1.4"/>
-        <circle cx="11" cy="5" r="1.1" fill="#f8e16a"/>
-        <circle cx="6" cy="10" r="1" fill="#f8e16a"/>
-        <circle cx="16" cy="10" r="1" fill="#f8e16a"/>
-        <circle cx="11" cy="17" r="1" fill="#f8e16a"/>
-        <path d="M11 5 L6 10 L11 17 L16 10 Z" stroke="#f8e16a" strokeWidth="1" fill="none"/>
-      </svg>
-    </div>
-  );
-}
-
-// ---------- APP SHELL ----------
-export default function LucidianApp() {
-  const { user, login, register, logout, deleteAccount } = useAuth();
-  const [lang, setLang] = useState(ls.get("lucidian.lang", "en"));
-  const labels = useMemo(() => LANG[lang], [lang]);
-  useEffect(() => ls.set("lucidian.lang", lang), [lang]);
-
-  const [settingsOpen, setSettingsOpen] = useState(false);
-
-  if (!user) return (
-    <AuthScreen labels={labels} onLogin={login} onRegister={register} />
-  );
-
-  return (
-    <div className="min-h-screen relative text-white">
-      <Starfield />
-
-      <div className="fixed top-4 left-4 z-20">
-        <button onClick={() => setSettingsOpen(true)} className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20">{labels.settings}</button>
-      </div>
-
-      {/* Header with centered wordmark and RIGHT orb */}
-      <header className="py-5">
-        <div className="w-full grid grid-cols-[1fr_auto_1fr] items-center px-6">
-          <div className="justify-self-start" />
-          <div className="justify-self-center text-3xl tracking-[0.6em] text-yellow-300 font-semibold select-none">L U C I D I A N</div>
-          <div className="justify-self-end"><LogoOrb /></div>
-        </div>
-      </header>
-
-      <main className="grid grid-cols-[290px_1fr] gap-4 px-6 pb-6 h-[calc(100vh-120px)]">
-        {/* Sidebar */}
-        <aside className="bg-white/5 border border-white/10 rounded-3xl p-4 flex flex-col">
-          <div className="flex gap-2 mb-3">
-            <button className="px-3 py-1.5 rounded-xl bg-yellow-400 text-black font-medium">{labels.new}</button>
-            <button className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20">{labels.library}</button>
-          </div>
-          <div className="mb-3">
-            <input placeholder={labels.searchConvos} className="w-full bg-white/10 rounded-xl px-3 py-2 outline-none" />
-            <button className="mt-2 w-full px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20">{labels.go}</button>
-          </div>
-          <div className="text-white/50 text-sm mb-2">Conversations</div>
-          <div className="space-y-2 overflow-auto pr-1">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between bg-white/5 rounded-xl p-2">
-                <div className="text-white/80 truncate">New Conversation</div>
-                <div className="flex gap-2 text-[12px] text-white/50">
-                  <button className="hover:text-white">{labels.select}</button>
-                  <button className="hover:text-white">{labels.delete}</button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-auto pt-4 text-white/60 text-sm">
-            <button onClick={logout} className="hover:text-white underline">{labels.signOut}</button>
-          </div>
-        </aside>
-
-        {/* Chat Area */}
-        <section className="bg-white/5 border border-white/10 rounded-3xl relative">
-          <Chat labels={labels} language={lang} />
-        </section>
-      </main>
-
-      <Settings
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        user={user}
-        setUser={(u) => ls.set("lucidian.user", u)}
-        lang={lang}
-        setLang={setLang}
-        labels={labels}
-        onDeleteAccount={deleteAccount}
-      />
-    </div>
-  );
-}
+/* boot */
+applyI18n();
+if(auth.current) showApp();
+else showAuth();
+</script>
+</body>
+</html>
