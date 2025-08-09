@@ -20,7 +20,6 @@
     radial-gradient(1200px 800px at 70% 30%, rgba(0,120,255,.10), transparent 60%),
     radial-gradient(900px 700px at 20% 70%, rgba(0,200,255,.08), transparent 60%),
     radial-gradient(600px 600px at 50% 50%, rgba(120,180,255,.06), transparent 70%), #000}
-  /* Immediate star speckles (no delay) */
   .space:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.95;background-image:
     radial-gradient(1px 1px at 8% 12%, #fff 99%, transparent),
     radial-gradient(1px 1px at 16% 28%, #dfe9ff 99%, transparent),
@@ -49,8 +48,8 @@
 
   /* —— LAYOUT —— */
   .app{display:grid;grid-template-columns: var(--sidebar-w) 1fr;grid-template-rows:auto 1fr auto;height:100svh}
-  header{grid-column:1/3;display:grid;grid-template-columns:auto 1fr 260px;align-items:center;padding:8px 12px;background:var(--glass-strong);backdrop-filter:blur(8px);gap:8px}
-  /* account / hamburger */
+  /* make column 1 equal to sidebar for true centering */
+  header{grid-column:1/3;display:grid;grid-template-columns: var(--sidebar-w) 1fr 260px;align-items:center;padding:8px 12px;background:var(--glass-strong);backdrop-filter:blur(8px);gap:8px}
   .leftHead{display:flex;align-items:center;gap:8px}
   .hamburger{display:none;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;border-radius:8px;padding:8px 10px;cursor:pointer}
   .account{position:relative}
@@ -60,8 +59,8 @@
   .acct-menu .row{display:flex;gap:8px;margin:6px 0}
   .acct-menu input, .acct-menu select{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff}
 
-  h1{grid-column:2/3;justify-self:center;margin:4px 0 0;letter-spacing:14px;font-size:3.4rem;line-height:1;color:var(--accent);text-shadow:0 0 12px rgba(232,198,106,.45);white-space:nowrap}
-  .crest{grid-column:3/4;justify-self:end;width:190px;margin-right:6px}
+  h1{grid-column:2/3;justify-self:center;margin:4px 0 0;letter-spacing:14px;font-size:3.8rem;line-height:1;color:var(--accent);text-shadow:0 0 12px rgba(232,198,106,.45);white-space:nowrap}
+  .crest{grid-column:3/4;justify-self:end;width:200px;margin-right:6px}
   .crest svg{width:100%;height:auto;display:block;filter:drop-shadow(0 0 10px rgba(232,198,106,.45))}
   .crest path{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round}
   .crest .glow{stroke:rgba(232,198,106,.35);stroke-width:4;filter:blur(1px)}
@@ -77,6 +76,7 @@
   .conv{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;gap:8px;align-items:center}
   .conv.active{background:rgba(255,255,255,.12)}
   .conv .select{border:none;border-radius:6px;padding:4px 8px;background:var(--accent);color:#000;cursor:pointer;white-space:nowrap;flex-shrink:0}
+  .conv .del{border:none;border-radius:6px;padding:4px 8px;background:rgba(255,80,80,.9);color:#fff;cursor:pointer}
   .conv span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 
   main{position:relative;overflow:auto;padding:16px}
@@ -93,9 +93,9 @@
   /* —— HOVER / TAP TOOLS —— */
   .msg-tools{
     position:absolute;top:-8px;right:0;transform:translateY(-100%);
-    display:flex;gap:6px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.25);
+    display:flex;gap:6px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.25);
     padding:4px 6px;border-radius:8px;opacity:0;pointer-events:none;transition:.12s;
-    backdrop-filter:blur(4px);z-index:5
+    backdrop-filter:blur(4px);z-index:50
   }
   .msg-wrap:hover .msg-tools, .msg-wrap.pinned .msg-tools{opacity:1;pointer-events:auto}
   .tool-btn{border:none;border-radius:6px;padding:4px 6px;background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-size:.85rem}
@@ -112,11 +112,19 @@
   .modal.open{display:flex}
   .card{width:min(900px,92vw);max-height:86vh;overflow:auto;background:var(--glass-strong);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:16px}
   .card h2{margin:0 0 8px;color:var(--accent)}
-  .lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-  .lib-item{border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:10px;background:rgba(255,255,255,.06)}
+  .lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+  .lib-item{border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:10px;background:rgba(255,255,255,.06);word-break:break-word}
   .lib-item img{width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:8px}
   .lib-item a{color:var(--accent);text-decoration:none}
   .edit-area{width:min(760px,90vw);height:180px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;padding:12px;resize:vertical}
+
+  /* —— AUTH GATE —— */
+  .gate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:10000;background:radial-gradient(1200px 800px at 50% 30%, rgba(0,120,255,.12), transparent 55%), #000}
+  .gate.open{display:flex}
+  .gate .panel{width:min(560px,92vw);background:var(--glass-strong);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:16px}
+  .gate h2{margin:0 0 8px;color:var(--accent)}
+  .gate .row{display:flex;gap:8px;margin:8px 0}
+  .gate input, .gate select{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff}
 
   /* —— MOBILE / TABLET —— */
   @media (max-width: 900px){
@@ -127,17 +135,33 @@
     .hamburger{display:inline-block}
     footer{grid-column:1/2}
     .message{max-width:90vw}
-    h1{font-size:2.2rem;letter-spacing:12px}
-    .crest{width:150px}
+    h1{font-size:2.4rem;letter-spacing:12px}
+    .crest{width:160px}
   }
 </style>
 </head>
 <body>
-  <div class="space">
-    <div class="stars"></div><div class="stars2"></div><div class="nebula"></div>
+  <div class="space"><div class="stars"></div><div class="stars2"></div><div class="nebula"></div></div>
+
+  <!-- Auth Gate -->
+  <div class="gate" id="gate">
+    <div class="panel">
+      <h2>Welcome to Lucidian</h2>
+      <div class="label">Create account</div>
+      <div class="row"><input id="gName" placeholder="Name" /></div>
+      <div class="row"><input id="gEmail" placeholder="Email" type="email" /></div>
+      <div class="row"><input id="gPhone" placeholder="Phone" /></div>
+      <div class="row"><input id="gPass" placeholder="Password" type="password" /></div>
+      <div class="row"><button class="btn primary" id="gSignup">Sign up</button></div>
+      <hr />
+      <div class="label">Or sign in</div>
+      <div class="row"><input id="gLEmail" placeholder="Email" type="email" /></div>
+      <div class="row"><input id="gLPass" placeholder="Password" type="password" /></div>
+      <div class="row"><button class="btn primary" id="gLogin">Log in</button></div>
+    </div>
   </div>
 
-  <div class="app">
+  <div class="app" id="app">
     <header>
       <div class="leftHead">
         <button class="hamburger" id="hamburger">☰</button>
@@ -163,10 +187,8 @@
               <div class="row"><input id="pfEmail" placeholder="Email" disabled /></div>
               <div class="row"><input id="pfPhone" placeholder="Phone" /></div>
               <div class="row"><select id="pfLang">
-                <option value="en">English</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
+                <option value="en">English</option><option value="es">Español</option>
+                <option value="fr">Français</option><option value="de">Deutsch</option>
               </select></div>
               <div class="row"><button class="btn primary" id="saveProfile">Save</button></div>
               <div class="row"><button class="btn" id="viewMemories">View memories</button><button class="btn" id="logout">Log out</button></div>
@@ -282,7 +304,10 @@ root.style.setProperty('--starsD', makeStars(800));
 root.style.setProperty('--starsE', makeStars(800));
 root.style.setProperty('--starsF', makeStars(800));
 
-/* ---------- STATE ---------- */
+/* ---------- ELEMENTS ---------- */
+const app=document.getElementById('app');
+const gate=document.getElementById('gate');
+
 const chatEl=document.getElementById('chat');
 const inputEl=document.getElementById('text');
 const fileEl=document.getElementById('file');
@@ -308,16 +333,18 @@ document.getElementById('saveEdit').onclick=saveEditedMessage;
 const memModal=document.getElementById('memModal');
 document.getElementById('closeMem').onclick=()=> memModal.classList.remove('open');
 
+/* ---------- STATE ---------- */
 let conversations=JSON.parse(localStorage.getItem('lucidian_convs')||'[]');
 let activeId=localStorage.getItem('lucidian_active')||null;
 let pendingFiles=[];
 let editingKey=null; // {id, idx}
 
-/* ---------- Accounts (local-only demo) ---------- */
+/* ---------- ACCOUNTS (local only) ---------- */
 const acctBtn=document.getElementById('acctBtn');
 const acctMenu=document.getElementById('acctMenu');
 const acctNot=document.getElementById('acctNotSigned');
 const acctYes=document.getElementById('acctSigned');
+
 const fields={
   suName:document.getElementById('suName'),
   suEmail:document.getElementById('suEmail'),
@@ -329,59 +356,85 @@ const fields={
   pfEmail:document.getElementById('pfEmail'),
   pfPhone:document.getElementById('pfPhone'),
   pfLang:document.getElementById('pfLang'),
+  gName:document.getElementById('gName'),
+  gEmail:document.getElementById('gEmail'),
+  gPhone:document.getElementById('gPhone'),
+  gPass:document.getElementById('gPass'),
+  gLEmail:document.getElementById('gLEmail'),
+  gLPass:document.getElementById('gLPass'),
 };
 function getAccounts(){return JSON.parse(localStorage.getItem('lucidian_accounts')||'{}');}
 function setAccounts(a){localStorage.setItem('lucidian_accounts', JSON.stringify(a));}
 function getSession(){return JSON.parse(localStorage.getItem('lucidian_session')||'null');}
 function setSession(s){localStorage.setItem('lucidian_session', JSON.stringify(s));refreshAccountUI();}
+
 function refreshAccountUI(){
   const s=getSession();
+  if(!s||!s.email){ gate.classList.add('open'); app.style.filter='blur(2px)'; }
+  else{ gate.classList.remove('open'); app.style.filter='none'; }
   acctMenu.classList.remove('open');
   if(s&&s.email){
     acctNot.style.display='none'; acctYes.style.display='';
     const a=getAccounts()[s.email]; fields.pfName.value=a.name||''; fields.pfEmail.value=a.email||''; fields.pfPhone.value=a.phone||''; fields.pfLang.value=a.lang||'en';
     acctBtn.textContent=`${a.name||a.email} ▾`;
   }else{
-    acctNot.style.display=''; acctYes.style.display='none';
-    acctBtn.textContent='Account ▾';
+    acctNot.style.display=''; acctYes.style.display='none'; acctBtn.textContent='Account ▾';
   }
 }
 acctBtn.onclick=(e)=>{e.stopPropagation(); acctMenu.classList.toggle('open');};
 document.addEventListener('click',(e)=>{ if(!acctMenu.contains(e.target) && e.target!==acctBtn){ acctMenu.classList.remove('open'); }});
 
 document.getElementById('doSignup').onclick=()=>{
-  const name=fields.suName.value.trim(), email=fields.suEmail.value.trim().toLowerCase(), phone=fields.suPhone.value.trim(), pass=fields.suPass.value;
+  const name=fields.suName.value.trim(), email=(fields.suEmail.value||'').trim().toLowerCase(), phone=fields.suPhone.value.trim(), pass=fields.suPass.value;
   if(!email||!pass){ alert('Email and password required.'); return; }
   const acc=getAccounts(); if(acc[email]){ alert('Account already exists. Log in instead.'); return; }
-  acc[email]={name,email,phone,pass,lang:'en',memories:[]}; setAccounts(acc); setSession({email});
-  alert('Account created locally.'); refreshAccountUI();
+  acc[email]={name,email,phone,pass,lang:'en',memories:[]}; setAccounts(acc); setSession({email}); alert('Account created locally.');
 };
 document.getElementById('doLogin').onclick=()=>{
-  const email=fields.liEmail.value.trim().toLowerCase(), pass=fields.liPass.value;
+  const email=(fields.liEmail.value||'').trim().toLowerCase(), pass=fields.liPass.value;
   const acc=getAccounts(); if(!acc[email]||acc[email].pass!==pass){ alert('Invalid email or password.'); return; }
-  setSession({email}); alert('Logged in.'); refreshAccountUI();
+  setSession({email}); alert('Logged in.');
 };
 document.getElementById('saveProfile').onclick=()=>{
-  const s=getSession(); if(!s) return;
-  const acc=getAccounts(); const a=acc[s.email]; if(!a) return;
-  a.name=fields.pfName.value.trim(); a.phone=fields.pfPhone.value.trim(); a.lang=fields.pfLang.value; setAccounts(acc); alert('Saved.');
-  acctBtn.textContent=`${a.name||a.email} ▾`;
+  const s=getSession(); if(!s) return; const acc=getAccounts(); const a=acc[s.email]; if(!a) return;
+  a.name=fields.pfName.value.trim(); a.phone=fields.pfPhone.value.trim(); a.lang=fields.pfLang.value; setAccounts(acc); alert('Saved.'); acctBtn.textContent=`${a.name||a.email} ▾`;
 };
-document.getElementById('logout').onclick=()=>{ setSession(null); alert('Logged out.'); };
+document.getElementById('logout').onclick=()=>{ setSession(null); };
 document.getElementById('viewMemories').onclick=()=>{
-  const s=getSession(); if(!s) return;
-  const acc=getAccounts()[s.email]; const body=document.getElementById('memBody');
-  const mems=acc?.memories||[];
-  if(!mems.length){ body.innerHTML='<div style="opacity:.8">No memories saved yet.</div>'; }
-  else{ body.innerHTML=mems.map(m=>`<div style="padding:8px;border:1px solid rgba(255,255,255,.2);border-radius:10px;margin:6px 0">${m}</div>`).join(''); }
+  const s=getSession(); if(!s) return; const acc=getAccounts()[s.email]; const body=document.getElementById('memBody');
+  const mems=acc?.memories||[]; body.innerHTML=mems.length? mems.map(m=>`<div style="padding:8px;border:1px solid rgba(255,255,255,.2);border-radius:10px;margin:6px 0">${m}</div>`).join('') : '<div style="opacity:.8">No memories saved yet.</div>';
   memModal.classList.add('open');
+};
+/* Gate actions */
+document.getElementById('gSignup').onclick=()=>{
+  const name=fields.gName.value.trim(), email=(fields.gEmail.value||'').trim().toLowerCase(), phone=fields.gPhone.value.trim(), pass=fields.gPass.value;
+  if(!email||!pass){ alert('Email and password required.'); return; }
+  const acc=getAccounts(); if(acc[email]){ alert('Account already exists. Try logging in.'); return; }
+  acc[email]={name,email,phone,pass,lang:'en',memories:[]}; setAccounts(acc); setSession({email}); alert('Account created.'); refreshAccountUI();
+};
+document.getElementById('gLogin').onclick=()=>{
+  const email=(fields.gLEmail.value||'').trim().toLowerCase(), pass=fields.gLPass.value;
+  const acc=getAccounts(); if(!acc[email]||acc[email].pass!==pass){ alert('Invalid email or password.'); return; }
+  setSession({email}); refreshAccountUI();
 };
 
 /* ---------- helpers ---------- */
 function save(){localStorage.setItem('lucidian_convs', JSON.stringify(conversations));}
 function setActive(id){activeId=id;localStorage.setItem('lucidian_active', id);renderList();renderChat();if(window.innerWidth<900)sidebar.classList.remove('open');}
 function createConversation(){const id=Date.now().toString();conversations.unshift({id,title:'New Conversation',messages:[]});save();setActive(id);}
-function renderList(filter=''){convList.innerHTML='';conversations.filter(c=>(c.title||'').toLowerCase().includes(filter.toLowerCase())||(c.messages||[]).some(m=>(m.text||'').toLowerCase().includes(filter.toLowerCase()))).forEach(c=>{const d=document.createElement('div');d.className='conv'+(c.id===activeId?' active':'');const span=document.createElement('span');span.textContent=c.title||'Untitled';span.style.flex='1';const sel=document.createElement('button');sel.textContent='Select';sel.className='select';sel.onclick=()=>setActive(c.id);d.appendChild(span);d.appendChild(sel);convList.appendChild(d);});}
+function renderList(filter=''){
+  convList.innerHTML='';
+  conversations.filter(c=>(c.title||'').toLowerCase().includes(filter.toLowerCase())||(c.messages||[]).some(m=>(m.text||'').toLowerCase().includes(filter.toLowerCase()))).forEach(c=>{
+    const d=document.createElement('div');d.className='conv'+(c.id===activeId?' active':'');
+    const span=document.createElement('span');span.textContent=c.title||'Untitled';span.style.flex='1';
+    const btns=document.createElement('div');btns.style.display='flex';btns.style.gap='6px';
+    const sel=document.createElement('button');sel.textContent='Select';sel.className='select';sel.onclick=()=>setActive(c.id);
+    const del=document.createElement('button');del.textContent='Del';del.className='del';del.title='Delete conversation';
+    del.onclick=()=>{ if(confirm('Delete this conversation?')){ conversations=conversations.filter(x=>x.id!==c.id); if(activeId===c.id) activeId=null; save(); renderList(); renderChat(); } };
+    btns.appendChild(sel); btns.appendChild(del);
+    d.appendChild(span); d.appendChild(btns); convList.appendChild(d);
+  });
+}
 
 function speak(text){ if(!text) return; try{ if('speechSynthesis' in window){ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); speechSynthesis.speak(u);} }catch{} }
 async function copyText(text){ try{ await navigator.clipboard.writeText(text||''); }catch(e){} }
@@ -409,7 +462,6 @@ function bubbleDOM(text, side, files, idx, role){
     });
     d.appendChild(at);
   }
-  // tap to pin tools (mobile)
   d.addEventListener('click',()=>{ wrap.classList.toggle('pinned'); });
   wrap.appendChild(d);
   return wrap;
@@ -431,13 +483,16 @@ function buildLibrary(){
   conversations.forEach(c=>{(c.messages||[]).forEach(m=>{(m.files||[]).forEach(f=>all.push({conv:c.title||'Untitled',...f}))})});
   (pendingFiles||[]).forEach(f=>all.push({conv:'(unsent)',...f}));
   if(!all.length){libGrid.innerHTML='<div style="opacity:.8">No shared items yet.</div>';return;}
-  all.forEach(item=>{
+  all.forEach((item,idx)=>{
     const d=document.createElement('div'); d.className='lib-item';
     if(item.type?.startsWith('image/')){const img=document.createElement('img');img.src=item.url;d.appendChild(img);}
     const meta=document.createElement('div');
-    meta.innerHTML=`<div>${item.name||'file'}</div><div style="opacity:.8">in <em>${item.conv}</em></div>
-      <div style="margin-top:6px;"><a href="${item.url}" target="_blank">Open</a> · <a href="${item.url}" download="${item.name||'file'}">Download</a></div>`;
-    d.appendChild(meta); libGrid.appendChild(d);
+    const open=document.createElement('a'); open.href=item.url; open.target='_blank'; open.textContent='Open';
+    const down=document.createElement('a'); down.href='#'; down.textContent='Download'; down.dataset.url=item.url; down.dataset.name=item.name||`file-${idx}`;
+    down.onclick=async(e)=>{ e.preventDefault(); try{ const r=await fetch(item.url); const b=await r.blob(); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=item.name||'download'; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(u); a.remove();},1000); }catch(err){ alert('Download failed.'); } };
+    meta.innerHTML=`<div style="margin:6px 0;word-break:break-word">${item.name||'file'}<div style="opacity:.8">in <em>${item.conv}</em></div></div>`;
+    const links=document.createElement('div'); links.style.marginTop='6px'; links.appendChild(open); links.appendChild(document.createTextNode(' · ')); links.appendChild(down);
+    meta.appendChild(links); d.appendChild(meta); libGrid.appendChild(d);
   });
 }
 
@@ -526,7 +581,6 @@ if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
     if(final){ inputEl.value=(inputEl.value?'':'')+final; } };
   recognition.onend=()=>{ if(callActive){ recognition.start(); } else { recognizing=false; micBtn.classList.remove('on'); } };
 }
-/* Mic = manual dictate only (no auto-send, no clearing) */
 micBtn.onclick=()=>{ if(!recognition){ alert('Speech Recognition not supported in this browser.'); return; }
   if(!recognizing){ recognition.start(); recognizing=true; micBtn.classList.add('on'); }
   else{ recognition.stop(); recognizing=false; micBtn.classList.remove('on'); } };
@@ -548,8 +602,11 @@ const mBlob=new Blob([JSON.stringify(manifest)],{type:'application/json'}); cons
 const link=document.createElement('link'); link.rel='manifest'; link.href=mUrl; document.head.appendChild(link);
 
 /* ---------- Boot ---------- */
-function firstRender(){ if(!activeId && conversations.length){ activeId=conversations[0].id; }
-if(!conversations.length){ createConversation(); } else { renderList(); renderChat(); } refreshAccountUI(); }
+function firstRender(){
+  if(!activeId && conversations.length){ activeId=conversations[0].id; }
+  if(!conversations.length){ createConversation(); } else { renderList(); renderChat(); }
+  refreshAccountUI();
+}
 firstRender();
 </script>
 </body>
